@@ -3,7 +3,7 @@
 **How long until your users can connect this app?** OAuth Runway gives developers building AI agents setup and approval guides for provider OAuth apps. You can look up a provider in the library, or submit any app name or website and watch an agent investigate it and write a shareable guide in real time.
 
 - Live demo: _<Vercel URL>_. Live generation asks for a passcode, which is in the submission notes.
-- Code: `web/` (Next.js 15 on Vercel, Anthropic API)
+- Code: `web/` (Next.js 15 on Vercel). Live generation runs on Gemini's free tier, with Claude available as a drop-in provider.
 - Evidence: `verification/` (live probe logs and the drafts from before verification)
 
 ## What I learned, and the scope I chose
@@ -37,7 +37,13 @@ So the product focuses on **predicting that climb and splitting the work.** Ever
 
   The synthesis step isn't allowed to raise a claim's label above what its research supports.
 - **Agents test, not just read.** The live agent has a narrow `http_probe` tool: HTTPS GET to public hosts only, no redirects followed, and a capped response size. It fetches discovery documents and hits authorize endpoints with a dummy client, which confirms endpoints, PKCE support and how the provider rejects unknown clients.
-- **Two phases for live generation.** Phase 1 is research with Claude Opus 5.5, using web search, web fetch and `http_probe`. Phase 2 is a structured-output call that turns the research notes into a guide matching the schema. Progress streams to the browser over SSE: searches, pages read, probes, and the agent's notes. The raw research notes are stored with the guide so anyone can audit it.
+- **Live generation on a free model, built around its limits.** The demo uses Gemini's free tier. Free-tier search grounding is unavailable, latency is unpredictable, and rate limits are tight, so the agent is a short pipeline instead of an open-ended tool loop:
+  1. **Plan.** A Gemini Flash model names the product, its developer-docs host, the official pages likely to answer the key questions, and the endpoints to probe.
+  2. **Read and follow links.** Code fetches those pages and drops any that don't exist, so made-up URLs are never cited. It collects on-topic links from the pages it read, and the model picks which to read over up to two rounds. Pages that only render with JavaScript go through Gemini's URL reader, keeping only URLs it actually retrieved. Keyless DuckDuckGo search is tried as well, but it's often bot-blocked, so nothing depends on it.
+  3. **Probe.** `http_probe` hits the provider's discovery documents and authorize endpoint.
+  4. **Write.** A schema-constrained call produces the guide. Code then enforces the evidence rules: "tested" requires a probe citation, and "sourced" requires a resolvable source.
+
+  Each model call walks a fallback chain of models with timeouts. A typical run takes 30–90 seconds, and progress streams to the browser over SSE: pages read, probes, and the agent's notes. The full research notes (page excerpts and probe responses) are stored with each guide so anyone can audit it. Setting `ANTHROPIC_API_KEY` switches to a Claude agent (`web/src/lib/agent.ts`) that uses built-in web search and fetch in a real tool loop.
 - **Independent verification for the curated library.** Research agents drafted 8 guides. Separate agents that didn't write the drafts then re-checked 64 high-impact claims and corrected 9. Every correction is published per guide and on `/method`.
 - **Variety over volume.** The 8 curated providers cover the whole range: GitHub and Notion (Easy), HubSpot, QuickBooks and Outlook (Moderate, each for a different reason), Gmail and Slack (Hard), and LinkedIn (Gated).
 
@@ -58,7 +64,7 @@ So the product focuses on **predicting that climb and splitting the work.** Ever
 
 ```bash
 cd web
-cp .env.example .env.local      # add ANTHROPIC_API_KEY; DEMO_PASSCODE is optional
+cp .env.example .env.local      # add GEMINI_API_KEY (free at aistudio.google.com/apikey) or ANTHROPIC_API_KEY
 npm install
 npm run dev                     # http://localhost:3000
 npm run validate-guides         # check the curated JSON against the schema
@@ -68,7 +74,8 @@ Locally, generated guides are saved to `web/.data/`. On Vercel, connect a Blob s
 
 ## Limitations
 
-- Live generation takes about 2–4 minutes and runs inside one Vercel function (`maxDuration` 300 s). A slow provider or a long research loop can hit the limit, and the page then shows a retry. A production version would run the agent as a background job and let the page reconnect.
+- Live generation runs on Gemini's free tier: a small model, per-minute and per-day quotas, and latency that varies with load. A burst of requests can exhaust the quota. The page then shows the error and a retry. Research depth is lower than a frontier model with real web search would give (the Claude provider). Text read through Gemini's URL reader is a model extraction, not verbatim page text, and the research notes label it as such.
+- Each generation runs inside one Vercel function (`maxDuration` 300 s). A production version would run the agent as a background job and let the page reconnect.
 - Generated guides aren't reviewed by a human, and the page says so.
 - Probes can confirm endpoints and error behavior, but not timelines or consent-screen details. Testing those properly needs a browser agent with a developer's console session, which is a natural next step.
 - There's no rate limiting beyond the optional passcode.

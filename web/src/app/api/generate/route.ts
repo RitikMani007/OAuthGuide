@@ -1,4 +1,5 @@
-import { generateGuide, type AgentEvent } from "@/lib/agent";
+import type { AgentEvent } from "@/lib/agent";
+import { generateGuide, activeProvider } from "@/lib/provider";
 import { getGuide, slugify } from "@/lib/store";
 
 export const runtime = "nodejs";
@@ -15,8 +16,8 @@ export async function POST(req: Request) {
   if (!q) return Response.json({ error: "Enter an app name or website." }, { status: 400 });
   if (process.env.DEMO_PASSCODE && passcode !== process.env.DEMO_PASSCODE)
     return Response.json({ error: "Live generation needs the demo passcode." }, { status: 401 });
-  if (!process.env.ANTHROPIC_API_KEY)
-    return Response.json({ error: "Server is missing ANTHROPIC_API_KEY." }, { status: 500 });
+  if (!activeProvider())
+    return Response.json({ error: "Server has no model API key (GEMINI_API_KEY or ANTHROPIC_API_KEY)." }, { status: 500 });
 
   const enc = new TextEncoder();
   const stream = new ReadableStream({

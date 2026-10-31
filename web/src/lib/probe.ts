@@ -31,20 +31,27 @@ export type ProbeResult = {
   error?: string;
 };
 
-export async function httpProbe(rawUrl: string): Promise<ProbeResult> {
+/** Returns an error string if the URL is not a public https URL, else null. */
+export async function checkPublicHttps(rawUrl: string): Promise<{ url?: URL; error?: string }> {
   let url: URL;
   try {
     url = new URL(rawUrl);
   } catch {
-    return { url: rawUrl, error: "invalid URL" };
+    return { error: "invalid URL" };
   }
-  if (url.protocol !== "https:") return { url: rawUrl, error: "only https URLs are allowed" };
+  if (url.protocol !== "https:") return { error: "only https URLs are allowed" };
   try {
     const { address } = await lookup(url.hostname);
-    if (isPrivate(address)) return { url: rawUrl, error: "host resolves to a private address" };
+    if (isPrivate(address)) return { error: "host resolves to a private address" };
   } catch {
-    return { url: rawUrl, error: "DNS lookup failed" };
+    return { error: "DNS lookup failed" };
   }
+  return { url };
+}
+
+export async function httpProbe(rawUrl: string): Promise<ProbeResult> {
+  const { url, error } = await checkPublicHttps(rawUrl);
+  if (!url) return { url: rawUrl, error };
   try {
     const res = await fetch(url, {
       method: "GET",

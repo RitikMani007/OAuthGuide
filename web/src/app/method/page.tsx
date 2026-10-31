@@ -54,14 +54,17 @@ export default function MethodPage() {
       <section className="space-y-3">
         <h2 className="text-lg font-semibold">How guides are produced</h2>
         <ol className="list-decimal pl-5 space-y-2 text-[15px] text-stone-700">
-          <li><b>Research agent.</b> It searches developer documentation, reads the relevant pages, and writes a dossier where every fact carries a URL.</li>
-          <li><b>Live probing.</b> The agent has a narrow <code className="text-xs bg-stone-100 px-1 rounded">http_probe</code> tool: HTTPS GET to public hosts only, no redirects followed, and a capped response size. It uses this to fetch OAuth/OIDC discovery documents and to hit authorize endpoints with a dummy client. A probe is how a claim earns the &ldquo;tested&rdquo; label without anyone logging in.</li>
-          <li><b>Structured synthesis.</b> A second model call converts the dossier into a guide using a strict JSON schema with structured outputs. It may not raise a claim&apos;s evidence label above what the dossier supports.</li>
+          <li><b>Plan.</b> The model identifies the product and its developer-docs site. It proposes the official pages most likely to answer the key questions (app creation, OAuth flow, scopes, review and publishing, limits), plus endpoints to probe.</li>
+          <li><b>Read and follow links.</b> Code fetches those pages and drops any that don&apos;t exist, so made-up URLs are never cited. It then collects on-topic links from the pages it read. The model picks the most useful ones over up to two rounds. Pages that only render with JavaScript are read through Gemini&apos;s URL reader, and only URLs the reader actually retrieved are kept.</li>
+          <li><b>Live probing.</b> A narrow <code className="text-xs bg-stone-100 px-1 rounded">http_probe</code> (HTTPS GET to public hosts only, no redirects followed, capped response size) fetches OAuth/OIDC discovery documents and hits authorize endpoints with a dummy client. A probe is how a claim earns the &ldquo;tested&rdquo; label without anyone logging in.</li>
+          <li><b>Structured synthesis.</b> One schema-constrained model call turns the research notes into a guide. Code then enforces the evidence rules: a claim can only be &ldquo;tested&rdquo; if it cites a probe, and &ldquo;sourced&rdquo; without a resolvable citation becomes &ldquo;inferred&rdquo;.</li>
           <li><b>Independent verification</b> (curated guides only). A separate agent that didn&apos;t write the draft re-checks 6–8 high-impact claims per guide against primary sources and the probe log. It corrects errors in place and logs every check.</li>
         </ol>
         <p className="text-sm text-stone-600">
-          Live guides generated from the search box go through steps 1–3 and are marked &ldquo;agent-generated, not hand-reviewed&rdquo;.
-          The agent&apos;s raw research notes are attached to each generated guide so anyone can audit it.
+          Live guides generated from the search box go through steps 1–4 and are marked &ldquo;agent-generated, not hand-reviewed&rdquo;.
+          The agent&apos;s full research notes (every page excerpt and probe response) are attached to each generated guide so
+          anyone can audit it. The live demo runs on Gemini&apos;s free tier. The same pipeline can run on Claude, with built-in
+          web search, by setting <code className="text-xs bg-stone-100 px-1 rounded">ANTHROPIC_API_KEY</code>.
         </p>
       </section>
 

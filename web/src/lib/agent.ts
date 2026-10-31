@@ -5,6 +5,7 @@ import { Guide, type StoredGuide } from "./schema";
 import { composioManagedMatch } from "./composio";
 import { httpProbe } from "./probe";
 import { slugify, saveGenerated } from "./store";
+import { enforceEvidence } from "./evidence";
 
 export const MODEL = "claude-opus-5-5";
 const BETAS = ["server-side-fallback-2026-07-01", "thinking-display-updates-2026-08-18"];
@@ -34,7 +35,7 @@ You have an http_probe tool. USE IT to test facts, not just read them: fetch OID
 
 Be efficient: about 4–8 searches and 4–8 fetches is usually enough. Finish with a dossier in plain text with these sections: FACTS (each line ends with [source URL] or [PROBE: what you observed]), TIMELINES, BLOCKERS, UNCERTAIN (things you could not confirm or found conflicting), SOURCES (title — URL, mark official/community). Never invent URLs.`;
 
-const SYNTH_SYSTEM = `You turn an OAuth research dossier into a developer-facing setup guide as JSON matching the provided schema.
+export const SYNTH_SYSTEM = `You turn an OAuth research dossier into a developer-facing setup guide as JSON matching the provided schema.
 
 Rules:
 - Ground every claim in the dossier. evidence = "tested" ONLY for facts confirmed by an http_probe observation in the dossier; "sourced" when a cited source supports it; otherwise "inferred". Never upgrade evidence.
@@ -60,7 +61,7 @@ function client() {
   return new Anthropic({ timeout: 280_000, maxRetries: 1 });
 }
 
-export async function* generateGuide(input: string, signal?: AbortSignal): AsyncGenerator<AgentEvent> {
+export async function* generateGuideClaude(input: string, signal?: AbortSignal): AsyncGenerator<AgentEvent> {
   const anthropic = client();
   const managed = composioManagedMatch(input);
 
@@ -217,7 +218,7 @@ ${dossier}
 
   yield { type: "phase", phase: "saving", message: "Saving shareable guide…" };
   const guide: StoredGuide = {
-    ...parsed.data,
+    ...enforceEvidence(parsed.data),
     slug: slugify(parsed.data.slug || input),
     meta: { origin: "generated", generated_at: new Date().toISOString(), model: final.model, dossier },
   };
@@ -227,7 +228,7 @@ ${dossier}
 }
 
 let cachedSchema: Record<string, unknown> | null = null;
-function guideJsonSchema() {
+export function guideJsonSchema() {
   if (!cachedSchema) {
     // zod v4 native JSON Schema export; strip keywords structured outputs rejects.
     const s = toJSONSchema(Guide, { target: "draft-7" }) as Record<string, unknown>;

@@ -128,7 +128,7 @@ export function LiveGenerator({ needsPasscode }: { needsPasscode: boolean }) {
         }}
       >
         <h1 className="text-xl font-semibold">Investigate &ldquo;{q}&rdquo;</h1>
-        <p className="text-sm text-stone-600">Live generation calls a paid model, so this demo needs a passcode (it&apos;s in the submission notes).</p>
+        <p className="text-sm text-stone-600">Live generation runs on a rate-limited model quota, so this demo needs a passcode (it&apos;s in the submission notes).</p>
         <input value={passcode} onChange={(e) => setPasscode(e.target.value)} type="password" placeholder="Passcode" className="w-full rounded-lg border border-stone-300 px-3 py-2" />
         {error && <p className="text-sm text-rose-700">{error}</p>}
         <button className="rounded-lg bg-stone-900 px-4 py-2 text-white">Start investigation</button>
@@ -143,8 +143,9 @@ export function LiveGenerator({ needsPasscode }: { needsPasscode: boolean }) {
         <div className="text-xs uppercase tracking-wide text-indigo-600 font-medium">✦ Agent investigation · {elapsed}s</div>
         <h1 className="text-2xl font-semibold mt-1">Building a guide for &ldquo;{q}&rdquo;</h1>
         <p className="text-sm text-stone-600 mt-1">
-          The agent searches developer docs, reads them, and probes the provider&apos;s live OAuth endpoints. Then it writes a
-          guide where each claim is labeled tested, sourced or inferred. This usually takes 2–4 minutes.
+          The agent finds and reads the provider&apos;s developer docs, follows links to the relevant pages, and probes the
+          provider&apos;s live OAuth endpoints. Then it writes a guide where each claim is labeled tested, sourced or inferred.
+          This usually takes 30–90 seconds.
         </p>
       </div>
 
