@@ -1,0 +1,10 @@
+== https://accounts.google.com/.well-known/openid-configuration
+{'code_challenge_methods_supported': ['plain', 'S256'], 'grant_types_supported': ['authorization_code', 'refresh_token', 'urn:ietf:params:oauth:grant-type:device_code', 'urn:ietf:params:oauth:grant-type:jwt-bearer'], 'scopes_supported': ['openid', 'email', 'profile']}
+== https://login.microsoftonline.com/common/v2.0/.well-known/openid-configuration
+{'code_challenge_methods_supported': None, 'grant_types_supported': None, 'scopes_supported': ['openid', 'profile', 'email', 'offline_access']}
+== https://slack.com/.well-known/openid-configuration
+{'code_challenge_methods_supported': None, 'grant_types_supported': ['authorization_code'], 'scopes_supported': ['openid', 'profile', 'email']}
+== https://developer.api.intuit.com/.well-known/openid_configuration
+{'code_challenge_methods_supported': None, 'grant_types_supported': None, 'scopes_supported': ['openid', 'email', 'profile', 'address', 'phone']}
+== https://www.linkedin.com/oauth/.well-known/openid-configuration
+{'code_challenge_methods_supported': None, 'grant_types_supported': None, 'scopes_supported': ['openid', 'profile', 'email']}

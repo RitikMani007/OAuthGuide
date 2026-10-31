@@ -1,0 +1,522 @@
+{
+  "slug": "quickbooks",
+  "name": "QuickBooks Online (Intuit)",
+  "website": "https://quickbooks.intuit.com",
+  "category": "Accounting",
+  "summary": "Creating an Intuit Developer app and getting sandbox (Development) keys is instant and self-serve. Production keys only unlock after you complete the App details and Compliance sections, including the App Assessment Questionnaire, and that applies to private (unlisted) apps too. The other big catch is cost: since the Intuit App Partner Program went live (full variable fees from 1 Nov 2025), read-heavy 'CorePlus' API calls are metered. The free Builder tier is capped at 500k CorePlus calls/month and blocks calls beyond that, and an AI agent that mostly reads books data will hit that cap first.",
+  "verdict": {
+    "difficulty": 3,
+    "label": "Moderate",
+    "hands_on": "2–4 hours",
+    "calendar": "Same day–1 week",
+    "approval": "to-go-public",
+    "headline_blocker": "The App Assessment Questionnaire for production keys requires live EULA, privacy policy, host domain, launch and disconnect URLs. A 'Not approved' result may not allow resubmission, so answer carefully the first time.",
+    "evidence": "sourced",
+    "time_note": "Most hands-on time goes to hosting the EULA, privacy, launch and disconnect pages and answering the App Assessment Questionnaire (about 40 min). Vendor guides report approval within minutes, but there's no SLA. An optional App Store listing adds 4–12+ weeks."
+  },
+  "stages": [
+    {
+      "name": "Development (sandbox)",
+      "what_you_get": "Development Client ID and Secret right away. They only work against sandbox companies (up to 10 per developer account, each valid for 2 years) on sandbox-quickbooks.api.intuit.com. You can use localhost and http redirect URIs. Real customers cannot connect.",
+      "how_to_reach": "Sign up at developer.intuit.com, then My Hub > App dashboard > create app (QuickBooks Online and Payments) and pick scopes."
+    },
+    {
+      "name": "Production (private / unlisted app)",
+      "what_you_get": "Production Client ID and Secret that work for any real QuickBooks Online company whose admin authorizes your app, on quickbooks.api.intuit.com. Your app name and logo appear on the Intuit consent screen. No App Store listing. API usage is metered under the App Partner Program (Builder tier: 500k CorePlus calls/month, then blocked).",
+      "how_to_reach": "Fill in App details (production redirect URIs, host domain, launch/disconnect URLs, EULA and privacy URLs, categories, countries). Then go to Keys and credentials > Production > Compliance, complete the App Assessment Questionnaire, and wait for approval. After that, 'Show credentials' appears."
+    },
+    {
+      "name": "Production at scale (>500 connections) or paid partner tier",
+      "what_you_get": "Uncapped or larger CorePlus allowances on paid tiers (Silver $300/mo, Gold $1,700/mo, Platinum $4,500/mo, with per-1,000-call overages), plus Premium APIs and support. Once you pass 500 connections, Intuit expects you to meet App Store security requirements and runs annual compliance reviews even if you are unlisted.",
+      "how_to_reach": "Subscribe to a paid tier in the Intuit Developer portal workspace. Respond to Intuit's annual or ongoing compliance reviews and fix any flagged issues within 2 weeks."
+    },
+    {
+      "name": "QuickBooks App Store listing (optional)",
+      "what_you_get": "Discoverability in the QuickBooks App Store and 'Get App Now' / connect from the store. Comes with a full technical, security and marketing review, repeated annually.",
+      "how_to_reach": "Submit the listing for review after you have production keys. You must fix critical, high and medium security findings before you are published."
+    }
+  ],
+  "managed_alternative": {
+    "composio_managed": true,
+    "note": "Composio lists QuickBooks under 'Composio-managed OAuth available'. That's fine for prototyping and internal demos: end users see Composio's app on the Intuit consent screen, and you skip Intuit's questionnaire entirely. For production you'll want your own app because (a) the consent screen and the 'connected apps' list in QuickBooks show your brand instead of Composio's, (b) the App Partner Program meters CorePlus calls per developer workspace/app, so you want your own quota and tier, and you don't want to depend on a shared app's limits, (c) you control scopes. Composio's docs note that the managed config includes com.intuit.quickbooks.payment, which fails if the company has no QuickBooks Payments, so remove it if you don't need it. (d) Intuit's compliance relationship (questionnaire, annual reviews) belongs to the app owner. Switching later means every customer has to re-authorize, because a new app has a new client ID."
+  },
+  "oauth": {
+    "console_url": "https://developer.intuit.com/app/developer/myapps",
+    "docs_url": "https://developer.intuit.com/app/developer/qbo/docs/develop/authentication-and-authorization/oauth-2.0",
+    "authorize_url": "https://appcenter.intuit.com/connect/oauth2",
+    "token_url": "https://oauth.platform.intuit.com/oauth2/v1/tokens/bearer",
+    "redirect_uri_rules": "Exact match: scheme, host, path, case and trailing slash all count. You keep separate redirect URI lists for Development and Production. Development allows http://localhost. Production must be https and cannot be localhost or a raw IP address. Up to about 25 URIs per app (per a third-party setup guide). The Intuit OAuth 2.0 Playground redirect (https://developer.intuit.com/v2/OAuth2Playground/RedirectUrl) is handy for testing.",
+    "pkce": "unknown. Intuit documents a confidential-client authorization code flow (client secret sent via HTTP Basic auth to the token endpoint). We found no official documentation of PKCE support for QuickBooks Online.",
+    "refresh_tokens": "Yes. Access token: 3600 s (1 hour). Refresh token: rolling roughly 100-day inactivity window (x_refresh_token_expires_in, e.g. 8640000 s). The refresh token value can change on refresh, about every 24–26 hours, so always store the newest one; reusing an old one returns invalid_grant. New policy: refresh tokens also have a hard 5-year maximum lifetime (the exact start date of the 5-year clock wasn't verified). Disconnect or revoke kills both tokens immediately.",
+    "notes": [
+      "realmId (the company ID) comes back as a query parameter on the redirect callback, not in the token response. Every Accounting API path is /v3/company/{realmId}/...",
+      "One token pair = one QuickBooks company. A user with 3 companies needs 3 connections.",
+      "Development and Production keys share the same authorize/token URLs. The key pair decides the environment. Using Production keys against the sandbox host (or the other way round) passes consent and then fails with 403 / ApplicationAuthorizationFailed (error 003100).",
+      "Revoke endpoint: https://developer.api.intuit.com/v2/oauth2/tokens/revoke. OpenID discovery doc: https://developer.api.intuit.com/.well-known/openid_configuration",
+      "Pin a current minorversion on API calls. Older minor versions (1–74) were retired 1 Aug 2025 according to a third-party guide.",
+      "Scopes can be added to an app later but (per a third-party guide) not removed. Pick deliberately.",
+      "Rotating the client secret invalidates the old one immediately, so deploy the new secret before rotating.",
+      "Live probe 2026-11-01: Intuit's OpenID discovery (https://developer.api.intuit.com/.well-known/openid_configuration) returns authorization_endpoint https://appcenter.intuit.com/connect/oauth2, token_endpoint https://oauth.platform.intuit.com/oauth2/v1/tokens/bearer and revocation_endpoint https://developer.api.intuit.com/v2/oauth2/tokens/revoke. It doesn't list code_challenge_methods_supported, but that absence doesn't prove PKCE is unsupported. The authorize URL 301-redirects to https://appcenter.intuit.com/app/connect/oauth2."
+    ]
+  },
+  "steps": [
+    {
+      "title": "Prepare legal pages and URLs before you touch the questionnaire",
+      "phase": "prepare",
+      "owner": "agent",
+      "time": "1–2 hours",
+      "detail": "Have these live on your production domain over https: **EULA / Terms of Service URL**, **Privacy Policy URL**, **Host domain** (e.g. `app.example.com`), **Launch URL** (where a user lands when opening your app from QuickBooks, ideally your sign-in / SSO page), **Disconnect URL** (page shown after a user disconnects your app from QuickBooks), and optionally a **Connect/Reconnect URL**. Also decide your production **Redirect URI** (e.g. `https://api.example.com/oauth/quickbooks/callback`).",
+      "agent_help": "Drafts the EULA and privacy policy text (covering QuickBooks data use, storage, retention, deletion and AI/LLM processing disclosures), builds simple Launch and Disconnect pages, and produces the full list of URLs to paste into the portal.",
+      "gotchas": [
+        "These URLs are required before you can even submit the questionnaire.",
+        "If your agent sends QuickBooks data to an LLM provider, say so in the privacy policy, since the questionnaire asks how the app uses QuickBooks data."
+      ],
+      "evidence": "sourced",
+      "source_ids": [
+        "s3",
+        "s5",
+        "s6"
+      ]
+    },
+    {
+      "title": "Create an Intuit Developer account and workspace",
+      "phase": "register",
+      "owner": "you",
+      "time": "10 min",
+      "detail": "Sign up at https://developer.intuit.com with a company email. Verify the email, set up MFA, and accept the Intuit Developer Terms. Billing for the App Partner Program is per workspace, so create the app in the workspace your company will own long-term, not a personal one.",
+      "agent_help": null,
+      "gotchas": [
+        "Account signup, MFA and terms acceptance need a human.",
+        "Use a shared or company-owned login (or add teammates via workspace sharing) so you don't get locked out of production keys when someone leaves."
+      ],
+      "evidence": "inferred",
+      "source_ids": [
+        "s5",
+        "s9"
+      ]
+    },
+    {
+      "title": "Create the app and select scopes",
+      "phase": "register",
+      "owner": "you",
+      "time": "5–10 min",
+      "detail": "**My Hub > App dashboard > Create an app > QuickBooks Online and Payments**. Name the app, since that name is what end users see on the consent screen. Select scopes: `com.intuit.quickbooks.accounting` (core data), plus `com.intuit.quickbooks.payment` only if you use the Payments API (US only), plus `openid profile email` if you want user identity / SSO.",
+      "agent_help": "Recommends the minimal scope set based on the tools your agent will call (e.g. invoices/customers/reports need only accounting).",
+      "gotchas": [
+        "Identity scopes alone give you 403s on every accounting call.",
+        "Requesting the payment scope for companies without QuickBooks Payments causes connection errors (Composio documents this as a Cloudflare 1016 error).",
+        "Scopes can be added later but reportedly not removed."
+      ],
+      "evidence": "sourced",
+      "source_ids": [
+        "s5",
+        "s10"
+      ]
+    },
+    {
+      "title": "Create a sandbox company and wire up Development keys",
+      "phase": "configure",
+      "owner": "agent",
+      "time": "20–40 min",
+      "detail": "**My Hub > Sandboxes > Add sandbox** (US or other region). In the app go to **Keys and credentials > Development**, copy the Client ID and Secret, and add a Development redirect URI (http://localhost:3000/callback is allowed here). Implement the auth code flow: redirect to `https://appcenter.intuit.com/connect/oauth2?client_id=...&response_type=code&scope=com.intuit.quickbooks.accounting&redirect_uri=...&state=...`, then exchange the code at the token endpoint using HTTP Basic auth, and capture `realmId` from the callback.",
+      "agent_help": "Writes the OAuth callback handler, token storage with refresh-token rotation, and realmId capture. Configures Composio (or your own) auth config with the Development keys and the sandbox base URL.",
+      "gotchas": [
+        "Max 10 sandbox companies per account. Each expires after 2 years and cannot be renewed.",
+        "Sandbox API host is sandbox-quickbooks.api.intuit.com. Production is quickbooks.api.intuit.com."
+      ],
+      "evidence": "sourced",
+      "source_ids": [
+        "s5",
+        "s4",
+        "s14",
+        "s15"
+      ]
+    },
+    {
+      "title": "Test the full flow, refresh rotation and error handling",
+      "phase": "test",
+      "owner": "agent",
+      "time": "30–60 min",
+      "detail": "Against the sandbox: authorize, exchange code, call `GET /v3/company/{realmId}/companyinfo/{realmId}`, then refresh twice in a row using the token returned by the first refresh. Handle `invalid_grant` (expired or revoked refresh token, so send the user back through consent), 401 on an expired access token, and log the `intuit_tid` response header on errors. These are exactly the questions the App Assessment Questionnaire asks.",
+      "agent_help": "Generates an integration test script and a summary of your implementation's answers to each questionnaire technical question (refresh frequency, discovery document use, CSRF/state handling, intuit_tid logging, retry policy).",
+      "gotchas": [
+        "Don't build production on tokens minted in the OAuth Playground. The questionnaire asks whether you use offline tools to obtain tokens."
+      ],
+      "evidence": "sourced",
+      "source_ids": [
+        "s5",
+        "s6"
+      ]
+    },
+    {
+      "title": "Fill in production App details and redirect URIs",
+      "phase": "configure",
+      "owner": "you",
+      "time": "20–30 min",
+      "detail": "In the app, open **Keys and credentials > Production** (or **Settings**) and complete: production **Redirect URIs** (https only, no localhost/IP), **App URLs** (Host domain, Launch URL, Disconnect URL, Connect/Reconnect URL), **EULA** and **Privacy Policy** URLs, app **category**, **countries** you serve, and the **regulated industries** answers.",
+      "agent_help": "Produces a copy-paste sheet of every field value, and checks each URL returns 200 over https.",
+      "gotchas": [
+        "Register the exact production callback (scheme, case, trailing slash).",
+        "Answer the regulated-industry question accurately. A stray selection reportedly triggers a failure or extra scrutiny.",
+        "Reload after saving to confirm the redirect URIs persisted."
+      ],
+      "evidence": "sourced",
+      "source_ids": [
+        "s3",
+        "s5",
+        "s6"
+      ]
+    },
+    {
+      "title": "Complete the App Assessment Questionnaire (Compliance)",
+      "phase": "review",
+      "owner": "you",
+      "time": "30–45 min",
+      "detail": "**Keys and credentials > Production > Compliance > App assessment questionnaire**. You attest to Intuit platform requirements and describe how your app uses QuickBooks data. Technical questions cover refresh-token handling, discovery-doc use, offline token tools, CDC use, handling QuickBooks edition changes, capturing intuit_tid, retrying failed auth, and handling expired/invalid tokens and CSRF errors. You can save progress, but once you submit you cannot edit.",
+      "agent_help": "Drafts an answer for every question from your codebase and architecture (e.g. 'refresh only when access token expires', 'state parameter validated'), and flags any answers that would need code changes first.",
+      "gotchas": [
+        "Required even for private, unlisted apps that connect to any production company.",
+        "Questionnaire is per app. Each integration needs its own.",
+        "A 'Not approved' result may not offer resubmission, so double-check before submitting.",
+        "Attestations must be made by a human representing your company."
+      ],
+      "evidence": "sourced",
+      "source_ids": [
+        "s3",
+        "s5",
+        "s6",
+        "s11"
+      ]
+    },
+    {
+      "title": "Wait for questionnaire approval",
+      "phase": "review",
+      "owner": "wait",
+      "time": "Minutes to a few business days",
+      "detail": "Status appears in the Compliance section. Third-party reports say approval often shows within minutes. Intuit itself only says the process is usually fast and suggests contacting Developer Support for an expected timeline if you have a launch date.",
+      "agent_help": null,
+      "gotchas": [
+        "If Intuit requests changes you get one resubmission path. Otherwise contact Developer Support."
+      ],
+      "evidence": "inferred",
+      "source_ids": [
+        "s5",
+        "s6",
+        "s11"
+      ]
+    },
+    {
+      "title": "Reveal production keys and switch environments",
+      "phase": "launch",
+      "owner": "agent",
+      "time": "15–30 min",
+      "detail": "Once approved, toggle **Show credentials** on the Production tab and copy the Client ID and Secret into your secret store (or a Composio custom auth config). Switch the API base to `https://quickbooks.api.intuit.com`, then run one real authorization against a live company. Ideally use a company admin other than yourself.",
+      "agent_help": "Updates environment config and secrets wiring, swaps base URLs, and runs a smoke test (companyinfo read).",
+      "gotchas": [
+        "Never mix Dev keys with production companies or the other way round (403 / error 003100).",
+        "Only company admins (or users with sufficient rights) can authorize the connection."
+      ],
+      "evidence": "sourced",
+      "source_ids": [
+        "s5"
+      ]
+    },
+    {
+      "title": "Pick an App Partner Program tier and budget CorePlus calls",
+      "phase": "launch",
+      "owner": "you",
+      "time": "15–30 min",
+      "detail": "Estimate your monthly **CorePlus** (mostly data-out: reads, queries, reports) call volume. **Core** calls (mostly data-in: creating and updating records) are uncapped. Builder (free) allows 500k CorePlus calls/month, and calls beyond that are **blocked**. Silver ($300/mo) is uncapped with 1M credits included and overage billing (secondary sources say $3.50 per 1,000). Gold is $1,700/mo and Platinum is $4,500/mo. Only successful (2xx) calls are counted.",
+      "agent_help": "Instruments your API client to count Core vs CorePlus calls per endpoint, projects monthly usage, and adds caching or Change Data Capture (CDC) to cut reads.",
+      "gotchas": [
+        "LLM agents tend to re-query reports and lists repeatedly. Cache aggressively or you'll hit the Builder cap mid-month.",
+        "Premium APIs are only available on paid tiers."
+      ],
+      "evidence": "sourced",
+      "source_ids": [
+        "s7",
+        "s8",
+        "s12"
+      ]
+    },
+    {
+      "title": "(Optional) Submit a QuickBooks App Store listing",
+      "phase": "launch",
+      "owner": "you",
+      "time": "Several hours of prep, then weeks of review",
+      "detail": "Only needed for marketplace distribution. Involves technical, security and marketing review, and must be repeated annually. Critical, high and medium security findings must be fixed before you're published.",
+      "agent_help": "Drafts listing copy, screenshots checklist, and a security-requirements gap analysis.",
+      "gotchas": [
+        "Even unlisted apps must meet App Store security requirements once they exceed 500 connections and are reviewed annually."
+      ],
+      "evidence": "sourced",
+      "source_ids": [
+        "s5",
+        "s6"
+      ]
+    }
+  ],
+  "scopes": [
+    {
+      "scope": "com.intuit.quickbooks.accounting",
+      "purpose": "Full QuickBooks Online Accounting API (customers, invoices, bills, payments, reports, etc.)",
+      "tier": "basic",
+      "review_impact": "Production keys require the App Assessment Questionnaire (as for any production app)."
+    },
+    {
+      "scope": "com.intuit.quickbooks.payment",
+      "purpose": "QuickBooks Payments API (card/ACH charges), US only",
+      "tier": "sensitive",
+      "review_impact": "Questionnaire. Also requires the connected company to have QuickBooks Payments enabled, otherwise connection errors occur."
+    },
+    {
+      "scope": "openid",
+      "purpose": "OpenID Connect ID token (Sign in with Intuit / SSO)",
+      "tier": "basic",
+      "review_impact": "none beyond production questionnaire"
+    },
+    {
+      "scope": "profile email phone address",
+      "purpose": "User identity claims only. No accounting data.",
+      "tier": "basic",
+      "review_impact": "none beyond production questionnaire"
+    },
+    {
+      "scope": "com.intuit.quickbooks.payroll (and granular payroll scopes)",
+      "purpose": "Payroll data",
+      "tier": "partner-only",
+      "review_impact": "Allowlisted/beta partners only, so you need to request access from Intuit."
+    }
+  ],
+  "review": {
+    "required_when": "Before you can see Production keys, i.e. before any real (non-sandbox) QuickBooks company can connect, including private, unlisted apps. A separate, heavier review applies only if you want an App Store listing. Ongoing/annual compliance reviews apply to listed apps and apps with more than 500 connections.",
+    "process": "Complete App details (URLs, redirect URIs, categories, countries, regulated industries), then submit the App Assessment Questionnaire under Keys and credentials > Production > Compliance. Intuit reviews and marks it approved / changes requested / not approved. After approval, Show credentials reveals production keys.",
+    "typical_duration": "Often minutes for the questionnaire (vendor guides report ~2 minutes), but there's no SLA and some cases take a few business days. An App Store listing takes weeks.",
+    "prepare": [
+      "EULA / Terms of Service URL (https, live)",
+      "Privacy Policy URL (https, live)",
+      "Host domain",
+      "Launch URL (SSO/sign-in page if you implement SSO)",
+      "Disconnect URL and Connect/Reconnect URL",
+      "Production https redirect URI(s)",
+      "Target industries / regulated-industry answers and countries served",
+      "Written answers on OAuth token handling, intuit_tid logging, error handling, CDC usage"
+    ],
+    "common_rejections": [
+      "Incorrect regulated-industry selection",
+      "Missing or non-working EULA/privacy/launch/disconnect URLs",
+      "Using offline-minted tokens (OAuth Playground) instead of a real in-app OAuth flow",
+      "Not handling expired or invalid refresh tokens and CSRF/state properly"
+    ],
+    "evidence": "sourced"
+  },
+  "blockers": [
+    {
+      "title": "Production keys hidden",
+      "symptom": "Production tab shows no Client ID/Secret, and the 'Show credentials' toggle is missing",
+      "fix": "Complete App details and submit the App Assessment Questionnaire. The toggle appears only after approval.",
+      "evidence": "sourced"
+    },
+    {
+      "title": "Environment / key mismatch",
+      "symptom": "Consent succeeds but the first API call returns 403 ApplicationAuthorizationFailed (errorCode 003100)",
+      "fix": "Use Development keys with sandbox-quickbooks.api.intuit.com and Production keys with quickbooks.api.intuit.com.",
+      "evidence": "sourced"
+    },
+    {
+      "title": "Redirect URI rejected in production",
+      "symptom": "Portal won't save http://localhost or an IP redirect URI for Production, or the authorize call errors with a redirect_uri mismatch",
+      "fix": "Use an exact https URI on a real domain in the Production list (use a tunnel like ngrok for local testing in Dev only).",
+      "evidence": "sourced"
+    },
+    {
+      "title": "Refresh token invalid_grant",
+      "symptom": "Token refresh returns {\"error\":\"invalid_grant\"} after days or weeks",
+      "fix": "Persist the new refresh_token returned on every refresh (it rotates). If the user was inactive >100 days, disconnected, or the 5-year max passed, they must re-authorize.",
+      "evidence": "sourced"
+    },
+    {
+      "title": "CorePlus calls blocked",
+      "symptom": "Read/query/report calls start failing mid-month on the Builder tier",
+      "fix": "Upgrade to Silver or higher (uncapped with overage fees) or reduce reads using caching and CDC.",
+      "evidence": "sourced"
+    },
+    {
+      "title": "Payment scope errors",
+      "symptom": "Connection fails (e.g. Cloudflare 1016) for companies without QuickBooks Payments",
+      "fix": "Drop com.intuit.quickbooks.payment from requested scopes unless needed.",
+      "evidence": "sourced"
+    }
+  ],
+  "agent_vs_you": {
+    "agent_can": [
+      "Draft EULA, privacy policy, Launch and Disconnect pages",
+      "Choose the minimal scope set",
+      "Implement the OAuth callback, realmId capture, refresh-token rotation and revoke handling",
+      "Write sandbox integration tests and refresh-twice tests",
+      "Draft answers to every App Assessment Questionnaire question from the codebase",
+      "Instrument Core vs CorePlus call counting and add caching/CDC to stay under tier limits",
+      "Swap Dev to Prod config and run smoke tests"
+    ],
+    "you_must": [
+      "Create and verify the Intuit Developer account (email, MFA, terms)",
+      "Create the app and enter values in the portal",
+      "Make the questionnaire attestations and submit on behalf of the company",
+      "Decide on and pay for an App Partner Program tier",
+      "Authorize a real QuickBooks company for the production smoke test",
+      "Respond to Intuit compliance follow-ups within 2 weeks"
+    ]
+  },
+  "uncertain": [
+    "Exact questionnaire review turnaround. Community sources say minutes, Intuit says 'usually fast' with no SLA.",
+    "Whether a 'Not approved' questionnaire can always be resubmitted, or only via Developer Support.",
+    "Exact per-tier CorePlus credits and overage rates for Gold and Platinum. Figures come from secondary sources (Apideck, Truto). Intuit's official fee page did not render for us.",
+    "Whether non-US developers are subject to the same fee schedule and dates (Intuit said non-US partners would be onboarded later with 30 days' notice).",
+    "PKCE support for QuickBooks Online web apps is undocumented.",
+    "Redirect URI limit of 25 and 'scopes cannot be removed' come from a third-party setup guide, not Intuit docs.",
+    "How the 5-year refresh token cap shows up in x_refresh_token_expires_in (the field may still report the 100-day rolling value).",
+    "Whether a Composio-managed QuickBooks connection counts against Composio's App Partner tier rather than yours (likely, but not documented)."
+  ],
+  "sources": [
+    {
+      "id": "s1",
+      "title": "Intuit Developer – OAuth 2.0 (QuickBooks Online)",
+      "url": "https://developer.intuit.com/app/developer/qbo/docs/develop/authentication-and-authorization/oauth-2.0",
+      "kind": "official"
+    },
+    {
+      "id": "s2",
+      "title": "Intuit Developer – Authorization FAQ",
+      "url": "https://developer.intuit.com/app/developer/qbo/docs/develop/authentication-and-authorization/faq",
+      "kind": "official"
+    },
+    {
+      "id": "s3",
+      "title": "Intuit Developer – Publish your app",
+      "url": "https://developer.intuit.com/app/developer/qbo/docs/go-live/publish-app",
+      "kind": "official"
+    },
+    {
+      "id": "s4",
+      "title": "Intuit Developer Blog – Important changes to refresh token policy",
+      "url": "https://medium.com/intuitdev/important-changes-to-refresh-token-policy-8443779d40db",
+      "kind": "official"
+    },
+    {
+      "id": "s5",
+      "title": "Unified.to – QuickBooks Online (Intuit) OAuth2 App Setup (snapshot 2026-09-20)",
+      "url": "https://docs.unified.to/skills/quickbooks-oauth-app/SKILL.md",
+      "kind": "community"
+    },
+    {
+      "id": "s6",
+      "title": "Apideck – Intuit App Assessment and Compliance",
+      "url": "https://developers.apideck.com/connectors/intuit-enterprise-suite/docs/application_owner+app_compliance",
+      "kind": "community"
+    },
+    {
+      "id": "s7",
+      "title": "Intuit Developer – Intuit App Partner Program FAQ",
+      "url": "https://developer.intuit.com/app/developer/qbo/docs/get-started/partner-faq",
+      "kind": "official"
+    },
+    {
+      "id": "s8",
+      "title": "Apideck – QuickBooks API Pricing and the Intuit App Partner Program",
+      "url": "https://www.apideck.com/blog/quickbooks-api-pricing-and-the-intuit-app-partner-program",
+      "kind": "community"
+    },
+    {
+      "id": "s9",
+      "title": "Intuit Developer – Share your workspace",
+      "url": "https://developer.intuit.com/app/developer/qbo/docs/get-started/share-workspace",
+      "kind": "official"
+    },
+    {
+      "id": "s10",
+      "title": "Composio – QuickBooks toolkit",
+      "url": "https://docs.composio.dev/toolkits/quickbooks",
+      "kind": "community"
+    },
+    {
+      "id": "s11",
+      "title": "Intuit Developer Blog – App assessment process (2021 refresh)",
+      "url": "https://blogs.intuit.com/?p=33093",
+      "kind": "official"
+    },
+    {
+      "id": "s12",
+      "title": "Truto – How much does the QuickBooks API cost (2026)",
+      "url": "https://truto.one/blog/how-much-does-the-quickbooks-api-cost-2026-pricing-rate-limits/",
+      "kind": "community"
+    },
+    {
+      "id": "s13",
+      "title": "Composio – Managed auth toolkits list",
+      "url": "https://docs.composio.dev/toolkits/managed-auth",
+      "kind": "community"
+    },
+    {
+      "id": "s14",
+      "title": "Live probe 2026-11-01: Intuit OpenID discovery document (authorize/token/revoke endpoints)",
+      "url": "https://developer.api.intuit.com/.well-known/openid_configuration",
+      "kind": "tested"
+    },
+    {
+      "id": "s15",
+      "title": "Live probe 2026-11-01: Intuit authorize endpoint with dummy client (301 to /app/connect/oauth2)",
+      "url": "https://appcenter.intuit.com/connect/oauth2?client_id=dummy&response_type=code&scope=com.intuit.quickbooks.accounting&redirect_uri=https://example.com/callback&state=x",
+      "kind": "tested"
+    }
+  ],
+  "meta": {
+    "origin": "curated",
+    "generated_at": "2026-11-01T00:00:00.000Z",
+    "verification": {
+      "date": "2026-11-01",
+      "method": "Independent agent re-checked 8 high-impact claims against official docs (WebFetch/WebSearch) and live unauthenticated endpoint probes captured 2026-11-01; no console login.",
+      "findings": [
+        {
+          "claim": "Verdict: Moderate (3); production keys gated by App details + App Assessment Questionnaire, private apps included",
+          "result": "confirmed",
+          "note": "Multiple integration-vendor guides (Codat, MyDBSync, Apideck) say production keys need App details + Compliance (questionnaire) even for private apps. Intuit's own pages are JS-rendered and didn't load. Rubric 3 fits."
+        },
+        {
+          "claim": "Calendar '1–7 days typical' for production keys",
+          "result": "corrected",
+          "note": "Vendor guides report approval in about 2 minutes after submission. I changed the calendar to 'Same day–1 week' and updated review.typical_duration."
+        },
+        {
+          "claim": "Headline blocker detail: a 'Not approved' result may not allow resubmission",
+          "result": "unverified",
+          "note": "No primary or secondary source found. It stays in uncertain."
+        },
+        {
+          "claim": "API fees: full variable CorePlus fees since Nov 1, 2025; Builder tier 500k CorePlus calls/month, blocked above",
+          "result": "confirmed",
+          "note": "Apideck and Woodard report Nov 1, 2025 after a discounted period from Jul 28 to Oct 31, 2025. The Intuit Partner FAQ (search snippet) confirms Builder is limited to 500,000 CorePlus credits and has no platform fee. Calls above the cap are blocked (Apideck; Intuit blog snippet: 'you will begin to experience API errors')."
+        },
+        {
+          "claim": "Paid tier prices Silver $300 / Gold $1,700 / Platinum $4,500",
+          "result": "unverified",
+          "note": "Only third-party figures (Apideck, Woodard). Intuit's blog confirms Silver includes 1M CorePlus credits. Intuit's official pricing table didn't render."
+        },
+        {
+          "claim": "Refresh token: 100-day rolling, rotates, 5-year hard cap; access token 1 h",
+          "result": "confirmed",
+          "note": "The Intuit Authorization FAQ (search snippets) says 'valid for 100 days... rolling' and 'maximum validity period of five years', and the rotation behaviour is confirmed. The 1 h access token is consistent across sources but I didn't see it in a rendered Intuit page. I removed the unverified 'Oct 2023 → Oct 2028' detail."
+        },
+        {
+          "claim": ">500 connections triggers annual compliance reviews even if unlisted",
+          "result": "confirmed",
+          "note": "Apideck quotes Intuit's Security requirements: 'any app with over 500 connections will be reviewed by Intuit on an annual basis'. That's a secondary quote of an official page."
+        },
+        {
+          "claim": "Authorize/token endpoints appcenter.intuit.com/connect/oauth2 and oauth.platform.intuit.com/oauth2/v1/tokens/bearer; PKCE unknown",
+          "result": "confirmed",
+          "note": "Live probe of the OpenID discovery doc matches both endpoints. It has no code_challenge_methods_supported, so PKCE stays 'unknown', not 'unsupported'. Authorize 301s to /app/connect/oauth2. Added tested sources s14/s15."
+        }
+      ]
+    }
+  }
+}
