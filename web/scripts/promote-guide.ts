@@ -1,7 +1,7 @@
 // Promotes a verified generated guide into the curated set that ships with the repo.
 //   npm run promote -- <slug> [--base https://oauthguide-psi.vercel.app] [--force]
 // The guide must be "Verified" by the same rules every guide is judged by (src/lib/trust.ts):
-// checks ran, none failed, key claims re-checked, more settled (confirmed or corrected) than unverified.
+// checks ran, none failed, key claims re-checked, at least two settled (confirmed or corrected) and more settled than unverified.
 // --force promotes anyway and records that the rules were overridden.
 import { writeFileSync, existsSync } from "fs";
 import path from "path";

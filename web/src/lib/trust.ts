@@ -27,7 +27,7 @@ export function guideTrust(g: StoredGuide): Trust {
     { id: "checks", label: "Automated checks ran", ok: !!c, detail: c ? `${c.results.length} checks on ${c.date}.` : "Not run yet." },
     { id: "no_fail", label: "No failed check", ok: !!c && c.summary.fail === 0, detail: c ? (c.summary.fail ? `${c.summary.fail} failed: ${c.results.filter((r) => r.status === "fail").map((r) => r.label).slice(0, 3).join(", ")}.` : `${c.summary.pass} passed, ${c.summary.warn} warnings.`) : "Needs the checks first." },
     { id: "claims", label: "Key claims re-checked by a second pass", ok: !!v, detail: v ? `${v.findings.length} claims re-checked on ${v.date} (${(v.kind ?? "independent") === "independent" ? "independent agent" : "automated, a model that did not write the guide"}).` : "No claim re-check yet." },
-    { id: "settled", label: "More claims settled than left unverified", ok: !!v && settled > 0 && settled >= unverified, detail: v ? `${confirmed} confirmed and ${corrected} corrected in place (${settled} settled against a source), ${unverified} unverified.` : "Needs the claim re-check first." },
+    { id: "settled", label: "At least two claims settled, and more settled than left unverified", ok: !!v && settled >= 2 && settled >= unverified, detail: v ? `${confirmed} confirmed and ${corrected} corrected in place (${settled} settled against a source), ${unverified} unverified.` : "Needs the claim re-check first." },
   ];
   const level: TrustLevel = rules.every((r) => r.ok) ? "verified" : c ? "checked" : "unchecked";
   const date = [c?.date, v?.date].filter((d): d is string => !!d).sort().pop() ?? null;
