@@ -31,6 +31,10 @@ const Findings = z.object({
     }),
   ),
 });
+const Docs = z.object({
+  developer_docs_domain: z.string().describe("host of the official developer docs, e.g. developers.zoom.us"),
+  doc_urls: z.array(z.string()).describe("6-10 official documentation URLs you believe exist: OAuth guide, app creation, scopes, app review / publishing / marketplace, verification, token lifetimes, rate limits"),
+});
 const Selection = z.object({
   read: z.array(z.string()).describe("up to 5 URLs from the candidates, most likely to settle the open claims"),
 });
@@ -65,6 +69,7 @@ export async function* recheckClaims(g: StoredGuide, ctx: RecheckContext): Async
   yield { type: "note", text: `Reading ${cited.length} cited pages in full… ` };
   const readSet = new Set<string>(cited.map((s) => s.url));
   const pages: Page[] = [];
+  let located = 0;
   const readable = (p: Page) => !p.error || p.text.length > 400;
   const first = await mapLimit(cited, 6, (s) => readPage(s.url, 60_000));
   pages.push(...first.filter(readable));
@@ -76,6 +81,35 @@ export async function* recheckClaims(g: StoredGuide, ctx: RecheckContext): Async
       pages.push(...extracts.map((e) => ({ url: e.url, title: `${e.url} (URL reader)`, text: e.text, links: [] })));
     } catch {
       /* the reader is best-effort */
+    }
+  }
+  // A thin guide (a homepage and a probe) gives the checker nothing to follow. Like the independent
+  // agent did for the curated library, find the provider's developer docs and read those too.
+  const substantive = pages.filter((p) => new URL(p.url).pathname.replace(/\/$/, "").length > 1);
+  if (substantive.length < 3 && elapsed() < 50) {
+    yield { type: "note", text: `Only ${substantive.length} substantive cited page${substantive.length === 1 ? "" : "s"}; locating ${g.name}'s developer documentation independently. ` };
+    try {
+      const res = await gemini({
+        models: [WRITER_MODELS[0], ...FAST_MODELS],
+        system: "You locate a provider's official developer documentation for registering an OAuth app. Use real URLs you are confident exist; they will be fetched and any that do not exist are discarded. The developer docs host often differs from the marketing host (developers.example.com, docs.example.com, api.example.com, or a product-specific path).",
+        prompt: `Product: ${g.name}
+Website: ${g.website}
+Authorize URL the guide names: ${g.oauth.authorize_url}
+Pages already read: ${pages.map((p) => p.url).join(", ") || "none"}`,
+        schema: toJSONSchema(Docs) as Record<string, unknown>,
+        timeoutMs: 40_000,
+        signal: ctx.signal,
+      });
+      const docs = Docs.parse(JSON.parse(res.text));
+      const host = docs.developer_docs_domain.replace(/^https?:\/\//, "").split("/")[0];
+      const urls = [...new Set([...docs.doc_urls.filter((u) => /^https:\/\//.test(u)), ...(host ? [`https://${host}/`] : [])])].filter((u) => !readSet.has(u)).slice(0, 10);
+      for (const u of urls) readSet.add(u);
+      const found = (await mapLimit(urls, 5, (u) => readPage(u, 60_000))).filter(readable).filter((p) => !pages.some((q) => q.url === p.url));
+      yield { type: "note", text: `Found ${found.length} of ${urls.length} expected developer-docs pages. ` };
+      pages.push(...found);
+      located = found.length;
+    } catch {
+      /* best-effort */
     }
   }
   if (!pages.length) throw new Error("none of the cited pages could be read");
@@ -234,7 +268,7 @@ Live probe results count as evidence for PKCE and token claims. Return every cla
       else g.uncertain = g.uncertain.map((u) => (u.startsWith("Automated re-check could not confirm") && !u.includes(c.text.slice(0, 40)) ? `${u}; ${c.text.slice(0, 120)}` : u));
     }
   }
-  const method = `Independent re-check of ${claims.length} high-impact claims by a model that did not write the guide, against ${pages.length} pages read in full today (${cited.length} cited, ${links} reached by following links${searches ? `, ${searches} web searches` : ""}) and ${probeNotes.length} live probe results, in ${open.length && links ? "two" : "one"} judging round${open.length && links ? "s" : ""}.${skipped ? ` ${skipped} claim${skipped > 1 ? "s" : ""} the guide states as unknown ${skipped > 1 ? "were" : "was"} not counted.` : ""}`;
+  const method = `Independent re-check of ${claims.length} high-impact claims by a model that did not write the guide, against ${pages.length} pages read in full today (${cited.length} cited, ${links} reached by following links${located ? `, ${located} developer-docs pages located independently` : ""}${searches ? `, ${searches} web searches` : ""}) and ${probeNotes.length} live probe results, in ${open.length && links ? "two" : "one"} judging round${open.length && links ? "s" : ""}.${skipped ? ` ${skipped} claim${skipped > 1 ? "s" : ""} the guide states as unknown ${skipped > 1 ? "were" : "was"} not counted.` : ""}`;
   return { findings, applied, model, method, skipped };
 }
 

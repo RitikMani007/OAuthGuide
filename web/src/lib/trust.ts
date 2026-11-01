@@ -9,7 +9,7 @@ export type Trust = { level: TrustLevel; rules: TrustRule[]; date: string | null
 
 export const TRUST_LABEL: Record<TrustLevel, string> = { verified: "Verified", checked: "Checked", unchecked: "Unchecked" };
 export const TRUST_BLURB: Record<TrustLevel, string> = {
-  verified: "Automated checks passed with no failures and a second pass confirmed its key claims.",
+  verified: "Automated checks passed with no failures and a second pass settled its key claims against sources.",
   checked: "Automated checks ran, but at least one trust rule is not met yet.",
   unchecked: "The automated checks have not run on this guide.",
 };
@@ -19,12 +19,15 @@ export function guideTrust(g: StoredGuide): Trust {
   const v = g.meta.verification;
   const n = (r: "confirmed" | "corrected" | "unverified") => (v ? v.findings.filter((f) => f.result === r).length : 0);
   const confirmed = n("confirmed");
+  const corrected = n("corrected");
   const unverified = n("unverified");
+  // A corrected claim is settled too: the second pass found the source and fixed the guide in place.
+  const settled = confirmed + corrected;
   const rules: TrustRule[] = [
     { id: "checks", label: "Automated checks ran", ok: !!c, detail: c ? `${c.results.length} checks on ${c.date}.` : "Not run yet." },
     { id: "no_fail", label: "No failed check", ok: !!c && c.summary.fail === 0, detail: c ? (c.summary.fail ? `${c.summary.fail} failed: ${c.results.filter((r) => r.status === "fail").map((r) => r.label).slice(0, 3).join(", ")}.` : `${c.summary.pass} passed, ${c.summary.warn} warnings.`) : "Needs the checks first." },
     { id: "claims", label: "Key claims re-checked by a second pass", ok: !!v, detail: v ? `${v.findings.length} claims re-checked on ${v.date} (${(v.kind ?? "independent") === "independent" ? "independent agent" : "automated, a model that did not write the guide"}).` : "No claim re-check yet." },
-    { id: "confirmed", label: "More claims confirmed than left unverified", ok: !!v && confirmed > 0 && confirmed >= unverified, detail: v ? `${confirmed} confirmed, ${n("corrected")} corrected in place, ${unverified} unverified.` : "Needs the claim re-check first." },
+    { id: "settled", label: "More claims settled than left unverified", ok: !!v && settled > 0 && settled >= unverified, detail: v ? `${confirmed} confirmed and ${corrected} corrected in place (${settled} settled against a source), ${unverified} unverified.` : "Needs the claim re-check first." },
   ];
   const level: TrustLevel = rules.every((r) => r.ok) ? "verified" : c ? "checked" : "unchecked";
   const date = [c?.date, v?.date].filter((d): d is string => !!d).sort().pop() ?? null;

@@ -48,7 +48,8 @@ Rules:
 - source_ids must reference entries in sources (ids s1, s2, …); include probe observations as sources with kind "tested" and the probed URL.
 - Steps must be concrete and ordered (exact console paths and fields where known). owner: "agent" for things an AI agent can do for the developer (look up, draft privacy policy text, generate manifests/config, write scope justifications, prepare redirect URI lists, script API calls); "you" for things requiring the human (logging in, accepting terms, identity/business verification, payment, recording demo video, legal sign-off); "wait" for provider review or approval time.
 - Be honest about difficulty: 1 Instant (create and use immediately), 2 Easy (self-serve, minor setup), 3 Moderate (review or verification needed to go public), 4 Hard (multi-week review, security assessment, or business verification), 5 Gated (partner program/contract required for useful access).
-- Put anything unconfirmed, conflicting or likely to change into "uncertain". Keep it scannable: short sentences, no marketing.`;
+- Put anything unconfirmed, conflicting or likely to change into "uncertain". Keep it scannable: short sentences, no marketing.
+- Do not guess the high-impact facts. For review.typical_duration, review.required_when, oauth.pkce and oauth.refresh_tokens: if no source or probe in the dossier states it, write "Not documented" (optionally followed by what is known, e.g. "Not documented; the console shows no review step") and add the open question to "uncertain". A guessed duration or requirement is worse than an honest gap: every guide is re-checked against sources afterwards, and a stated fact that no source supports counts against it.`;
 
 const probeTool: Anthropic.Beta.BetaTool = {
   name: "http_probe",
