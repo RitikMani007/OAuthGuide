@@ -445,6 +445,208 @@
         }
       ]
     },
-    "logo": "https://logos.composio.dev/api/notion"
+    "logo": "https://logos.composio.dev/api/notion",
+    "checks": {
+      "date": "2026-11-01",
+      "duration_ms": 3256,
+      "results": [
+        {
+          "id": "links-1",
+          "group": "links",
+          "label": "Authorization (Notion API)",
+          "url": "https://developers.notion.com/docs/authorization",
+          "status": "pass",
+          "detail": "Reachable (HTTP 200)."
+        },
+        {
+          "id": "links-2",
+          "group": "links",
+          "label": "Public connections",
+          "url": "https://developers.notion.com/guides/get-started/public-connections",
+          "status": "pass",
+          "detail": "Reachable (HTTP 200)."
+        },
+        {
+          "id": "links-3",
+          "group": "links",
+          "label": "List on the Marketplace",
+          "url": "https://developers.notion.com/guides/get-started/marketplace-listing",
+          "status": "pass",
+          "detail": "Reachable (HTTP 200)."
+        },
+        {
+          "id": "links-4",
+          "group": "links",
+          "label": "Refresh a token (API reference)",
+          "url": "https://developers.notion.com/reference/refresh-a-token",
+          "status": "pass",
+          "detail": "Reachable (HTTP 200)."
+        },
+        {
+          "id": "links-5",
+          "group": "links",
+          "label": "Getting started / connection types",
+          "url": "https://developers.notion.com/docs/getting-started",
+          "status": "pass",
+          "detail": "Reachable (HTTP 200)."
+        },
+        {
+          "id": "links-6",
+          "group": "links",
+          "label": "Unified.to: Notion OAuth app skill (verified 2026-09-20)",
+          "url": "https://docs.unified.to/skills/notion-oauth-app/SKILL.md",
+          "status": "pass",
+          "detail": "Reachable (HTTP 200)."
+        },
+        {
+          "id": "links-7",
+          "group": "links",
+          "label": "Notion API changelog",
+          "url": "https://developers.notion.com/page/changelog",
+          "status": "pass",
+          "detail": "Reachable (HTTP 200)."
+        },
+        {
+          "id": "links-8",
+          "group": "links",
+          "label": "Enterprise connection settings (Notion Help)",
+          "url": "https://www.notion.com/help/enterprise-connection-settings",
+          "status": "pass",
+          "detail": "Reachable (HTTP 200)."
+        },
+        {
+          "id": "links-9",
+          "group": "links",
+          "label": "Make: Notion app docs (privacy policy / terms / support email fields)",
+          "url": "https://www.make.com/en/help/app/notion",
+          "status": "warn",
+          "detail": "HTTP 403: the site blocks automated readers, so the page exists but its text could not be re-read."
+        },
+        {
+          "id": "links-10",
+          "group": "links",
+          "label": "django-allauth: Notion provider (localhost-only http note)",
+          "url": "https://django-allauth.readthedocs.io/en/latest/socialaccount/providers/notion.html",
+          "status": "pass",
+          "detail": "Reachable (HTTP 200)."
+        },
+        {
+          "id": "links-11",
+          "group": "links",
+          "label": "Composio: Managed auth toolkits",
+          "url": "https://docs.composio.dev/toolkits/managed-auth",
+          "status": "pass",
+          "detail": "Reachable (HTTP 200)."
+        },
+        {
+          "id": "endpoints-1",
+          "group": "endpoints",
+          "label": "Authorize endpoint",
+          "url": "https://api.notion.com/v1/oauth/authorize",
+          "status": "pass",
+          "detail": "HTTP 302: redirects to https://app.notion.com/install-integration?response_type=code&client_id=test_pro."
+        },
+        {
+          "id": "endpoints-2",
+          "group": "endpoints",
+          "label": "PKCE parameters",
+          "url": "https://api.notion.com/v1/oauth/authorize",
+          "status": "pass",
+          "detail": "Request with code_challenge/S256 accepted at the transport level (HTTP 302). This confirms the parameters are tolerated, not that PKCE is enforced."
+        },
+        {
+          "id": "endpoints-3",
+          "group": "endpoints",
+          "label": "Token endpoint",
+          "url": "https://api.notion.com/v1/oauth/token",
+          "status": "pass",
+          "detail": "Exists: a dummy code exchange was rejected with an OAuth error (HTTP 401)."
+        },
+        {
+          "id": "consistency-1",
+          "group": "consistency",
+          "label": "Difficulty label",
+          "status": "pass",
+          "detail": "Easy matches 2/5."
+        },
+        {
+          "id": "consistency-2",
+          "group": "consistency",
+          "label": "Approval vs calendar time",
+          "status": "pass",
+          "detail": "\"Same day\" is consistent with approval \"none\"."
+        },
+        {
+          "id": "consistency-3",
+          "group": "consistency",
+          "label": "Stage ladder",
+          "status": "pass",
+          "detail": "4 stages from test app to production."
+        },
+        {
+          "id": "consistency-4",
+          "group": "consistency",
+          "label": "Step coverage",
+          "status": "pass",
+          "detail": "9 steps covering prepare → register → configure → test → launch → review."
+        },
+        {
+          "id": "consistency-5",
+          "group": "consistency",
+          "label": "Agent steps explain the help",
+          "status": "pass",
+          "detail": "Every agent-owned step says what the agent produces."
+        },
+        {
+          "id": "consistency-6",
+          "group": "consistency",
+          "label": "Citations resolve",
+          "status": "pass",
+          "detail": "Every citation points at a listed source."
+        },
+        {
+          "id": "consistency-7",
+          "group": "consistency",
+          "label": "\"Tested\" means probed",
+          "status": "pass",
+          "detail": "0 tested step(s) all cite a live probe."
+        },
+        {
+          "id": "consistency-8",
+          "group": "consistency",
+          "label": "Blockers",
+          "status": "pass",
+          "detail": "6 blockers with symptom and fix."
+        },
+        {
+          "id": "catalog-1",
+          "group": "catalog",
+          "label": "Managed OAuth app",
+          "status": "pass",
+          "detail": "Catalog confirms a Composio-managed OAuth app exists."
+        },
+        {
+          "id": "usability-1",
+          "group": "usability",
+          "label": "Step detail",
+          "status": "pass",
+          "detail": "Every step has concrete instructions."
+        },
+        {
+          "id": "usability-2",
+          "group": "usability",
+          "label": "Exports render",
+          "status": "pass",
+          "detail": "Markdown 15.8k chars, JSON 28.7k chars."
+        }
+      ],
+      "summary": {
+        "pass": 24,
+        "warn": 1,
+        "fail": 0,
+        "skip": 0
+      },
+      "applied": []
+    }
   }
 }

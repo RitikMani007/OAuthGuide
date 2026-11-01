@@ -518,6 +518,231 @@
         }
       ]
     },
-    "logo": "https://logos.composio.dev/api/quickbooks"
+    "logo": "https://logos.composio.dev/api/quickbooks",
+    "checks": {
+      "date": "2026-11-01",
+      "duration_ms": 10560,
+      "results": [
+        {
+          "id": "links-1",
+          "group": "links",
+          "label": "Intuit Developer – OAuth 2.0 (QuickBooks Online)",
+          "url": "https://developer.intuit.com/app/developer/qbo/docs/develop/authentication-and-authorization/oauth-2.0",
+          "status": "pass",
+          "detail": "Reachable (HTTP 200)."
+        },
+        {
+          "id": "links-2",
+          "group": "links",
+          "label": "Intuit Developer – Authorization FAQ",
+          "url": "https://developer.intuit.com/app/developer/qbo/docs/develop/authentication-and-authorization/faq",
+          "status": "pass",
+          "detail": "Reachable (HTTP 200)."
+        },
+        {
+          "id": "links-3",
+          "group": "links",
+          "label": "Intuit Developer – Publish your app",
+          "url": "https://developer.intuit.com/app/developer/qbo/docs/go-live/publish-app",
+          "status": "pass",
+          "detail": "Reachable (HTTP 200)."
+        },
+        {
+          "id": "links-4",
+          "group": "links",
+          "label": "Intuit Developer Blog – Important changes to refresh token policy",
+          "url": "https://medium.com/intuitdev/important-changes-to-refresh-token-policy-8443779d40db",
+          "status": "warn",
+          "detail": "HTTP 403: the site blocks automated readers, so the page exists but its text could not be re-read."
+        },
+        {
+          "id": "links-5",
+          "group": "links",
+          "label": "Unified.to – QuickBooks Online (Intuit) OAuth2 App Setup (snapshot 2026-09-20)",
+          "url": "https://docs.unified.to/skills/quickbooks-oauth-app/SKILL.md",
+          "status": "pass",
+          "detail": "Reachable (HTTP 200)."
+        },
+        {
+          "id": "links-6",
+          "group": "links",
+          "label": "Apideck – Intuit App Assessment and Compliance",
+          "url": "https://developers.apideck.com/connectors/intuit-enterprise-suite/docs/application_owner+app_compliance",
+          "status": "pass",
+          "detail": "Reachable (HTTP 200)."
+        },
+        {
+          "id": "links-7",
+          "group": "links",
+          "label": "Intuit Developer – Intuit App Partner Program FAQ",
+          "url": "https://developer.intuit.com/app/developer/qbo/docs/get-started/partner-faq",
+          "status": "pass",
+          "detail": "Reachable (HTTP 200)."
+        },
+        {
+          "id": "links-8",
+          "group": "links",
+          "label": "Apideck – QuickBooks API Pricing and the Intuit App Partner Program",
+          "url": "https://www.apideck.com/blog/quickbooks-api-pricing-and-the-intuit-app-partner-program",
+          "status": "pass",
+          "detail": "Reachable (HTTP 200)."
+        },
+        {
+          "id": "links-9",
+          "group": "links",
+          "label": "Intuit Developer – Share your workspace",
+          "url": "https://developer.intuit.com/app/developer/qbo/docs/get-started/share-workspace",
+          "status": "pass",
+          "detail": "Reachable (HTTP 200)."
+        },
+        {
+          "id": "links-10",
+          "group": "links",
+          "label": "Composio – QuickBooks toolkit",
+          "url": "https://docs.composio.dev/toolkits/quickbooks",
+          "status": "pass",
+          "detail": "Reachable (HTTP 200)."
+        },
+        {
+          "id": "links-11",
+          "group": "links",
+          "label": "Intuit Developer Blog – App assessment process (2021 refresh)",
+          "url": "https://blogs.intuit.com/?p=33093",
+          "status": "warn",
+          "detail": "HTTP 403: the site blocks automated readers, so the page exists but its text could not be re-read."
+        },
+        {
+          "id": "links-12",
+          "group": "links",
+          "label": "Truto – How much does the QuickBooks API cost (2026)",
+          "url": "https://truto.one/blog/how-much-does-the-quickbooks-api-cost-2026-pricing-rate-limits/",
+          "status": "pass",
+          "detail": "Reachable (HTTP 200)."
+        },
+        {
+          "id": "links-13",
+          "group": "links",
+          "label": "Composio – Managed auth toolkits list",
+          "url": "https://docs.composio.dev/toolkits/managed-auth",
+          "status": "pass",
+          "detail": "Reachable (HTTP 200)."
+        },
+        {
+          "id": "endpoints-1",
+          "group": "endpoints",
+          "label": "Authorize endpoint",
+          "url": "https://appcenter.intuit.com/connect/oauth2",
+          "status": "pass",
+          "detail": "HTTP 301: redirects to a sign-in page (endpoint exists; the dummy client is challenged at login)."
+        },
+        {
+          "id": "endpoints-2",
+          "group": "endpoints",
+          "label": "PKCE parameters",
+          "url": "https://appcenter.intuit.com/connect/oauth2",
+          "status": "pass",
+          "detail": "Request with code_challenge/S256 accepted at the transport level (HTTP 301). This confirms the parameters are tolerated, not that PKCE is enforced."
+        },
+        {
+          "id": "endpoints-3",
+          "group": "endpoints",
+          "label": "Token endpoint",
+          "url": "https://oauth.platform.intuit.com/oauth2/v1/tokens/bearer",
+          "status": "pass",
+          "detail": "Exists: a dummy code exchange was rejected with an OAuth error (HTTP 401)."
+        },
+        {
+          "id": "consistency-1",
+          "group": "consistency",
+          "label": "Difficulty label",
+          "status": "pass",
+          "detail": "Moderate matches 3/5."
+        },
+        {
+          "id": "consistency-2",
+          "group": "consistency",
+          "label": "Approval vs calendar time",
+          "status": "pass",
+          "detail": "\"Same day–1 week\" is consistent with approval \"to-go-public\"."
+        },
+        {
+          "id": "consistency-3",
+          "group": "consistency",
+          "label": "Stage ladder",
+          "status": "pass",
+          "detail": "4 stages from test app to production."
+        },
+        {
+          "id": "consistency-4",
+          "group": "consistency",
+          "label": "Step coverage",
+          "status": "pass",
+          "detail": "11 steps covering prepare → register → configure → test → review → launch."
+        },
+        {
+          "id": "consistency-5",
+          "group": "consistency",
+          "label": "Agent steps explain the help",
+          "status": "pass",
+          "detail": "Every agent-owned step says what the agent produces."
+        },
+        {
+          "id": "consistency-6",
+          "group": "consistency",
+          "label": "Citations resolve",
+          "status": "pass",
+          "detail": "Every citation points at a listed source."
+        },
+        {
+          "id": "consistency-7",
+          "group": "consistency",
+          "label": "\"Tested\" means probed",
+          "status": "pass",
+          "detail": "0 tested step(s) all cite a live probe."
+        },
+        {
+          "id": "consistency-8",
+          "group": "consistency",
+          "label": "Blockers",
+          "status": "pass",
+          "detail": "6 blockers with symptom and fix."
+        },
+        {
+          "id": "catalog-1",
+          "group": "catalog",
+          "label": "Managed OAuth app",
+          "status": "pass",
+          "detail": "Catalog confirms a Composio-managed OAuth app exists."
+        },
+        {
+          "id": "catalog-2",
+          "group": "catalog",
+          "label": "Scopes vs Composio's managed app",
+          "status": "pass",
+          "detail": "All 6 scopes Composio's managed app requests are covered."
+        },
+        {
+          "id": "usability-1",
+          "group": "usability",
+          "label": "Step detail",
+          "status": "pass",
+          "detail": "Every step has concrete instructions."
+        },
+        {
+          "id": "usability-2",
+          "group": "usability",
+          "label": "Exports render",
+          "status": "pass",
+          "detail": "Markdown 20.0k chars, JSON 35.3k chars."
+        }
+      ],
+      "summary": {
+        "pass": 26,
+        "warn": 2,
+        "fail": 0,
+        "skip": 0
+      },
+      "applied": []
+    }
   }
 }

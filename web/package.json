@@ -9,6 +9,7 @@
     "lint": "eslint",
     "index-guides": "node scripts/index-guides.mjs",
     "validate-guides": "npx --yes tsx scripts/validate-guides.ts",
+    "backfill-checks": "node scripts/backfill-checks.mjs",
     "prebuild": "node scripts/index-guides.mjs"
   },
   "dependencies": {

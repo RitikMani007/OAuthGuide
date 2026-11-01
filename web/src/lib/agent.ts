@@ -11,8 +11,13 @@ import { enforceEvidence } from "./evidence";
 export const MODEL = "claude-opus-5-5";
 const BETAS = ["server-side-fallback-2026-07-01", "thinking-display-updates-2026-08-18"];
 
+import type { CheckResult, StoredGuide as SG } from "./schema";
+
 export type AgentEvent =
-  | { type: "phase"; phase: "research" | "synthesis" | "saving" | "done"; message: string }
+  | { type: "phase"; phase: "research" | "synthesis" | "saving" | "verify" | "done"; message: string }
+  | { type: "check"; result: CheckResult }
+  | { type: "claim"; finding: NonNullable<SG["meta"]["verification"]>["findings"][number] }
+  | { type: "verified"; summary: { pass: number; warn: number; fail: number; skip: number }; claims: number; applied: number }
   | { type: "search"; query: string }
   | { type: "search_results"; count: number }
   | { type: "fetch"; url: string }
@@ -226,7 +231,6 @@ ${dossier}
   };
   await saveGenerated(guide);
   yield { type: "guide", slug: guide.slug };
-  yield { type: "phase", phase: "done", message: "Done." };
 }
 
 let cachedSchema: Record<string, unknown> | null = null;

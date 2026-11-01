@@ -489,6 +489,255 @@
         }
       ]
     },
-    "logo": "https://logos.composio.dev/api/github"
+    "logo": "https://logos.composio.dev/api/github",
+    "checks": {
+      "date": "2026-11-01",
+      "duration_ms": 3372,
+      "results": [
+        {
+          "id": "links-1",
+          "group": "links",
+          "label": "Differences between GitHub Apps and OAuth apps",
+          "url": "https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/differences-between-github-apps-and-oauth-apps",
+          "status": "pass",
+          "detail": "Reachable (HTTP 200)."
+        },
+        {
+          "id": "links-2",
+          "group": "links",
+          "label": "Generating a user access token for a GitHub App",
+          "url": "https://docs.github.com/en/apps/creating-github-apps/authenticating-with-a-github-app/generating-a-user-access-token-for-a-github-app",
+          "status": "pass",
+          "detail": "Reachable (HTTP 200)."
+        },
+        {
+          "id": "links-3",
+          "group": "links",
+          "label": "About the user authorization callback URL",
+          "url": "https://docs.github.com/en/apps/creating-github-apps/registering-a-github-app/about-the-user-authorization-callback-url",
+          "status": "pass",
+          "detail": "Reachable (HTTP 200)."
+        },
+        {
+          "id": "links-4",
+          "group": "links",
+          "label": "Registering a GitHub App",
+          "url": "https://docs.github.com/en/apps/creating-github-apps/registering-a-github-app/registering-a-github-app",
+          "status": "pass",
+          "detail": "Reachable (HTTP 200)."
+        },
+        {
+          "id": "links-5",
+          "group": "links",
+          "label": "Authenticating with a GitHub App on behalf of a user",
+          "url": "https://docs.github.com/en/apps/creating-github-apps/authenticating-with-a-github-app/authenticating-with-a-github-app-on-behalf-of-a-user",
+          "status": "pass",
+          "detail": "Reachable (HTTP 200)."
+        },
+        {
+          "id": "links-6",
+          "group": "links",
+          "label": "Making a GitHub App public or private",
+          "url": "https://docs.github.com/apps/creating-github-apps/registering-a-github-app/making-a-github-app-public-or-private",
+          "status": "pass",
+          "detail": "Reachable (HTTP 200)."
+        },
+        {
+          "id": "links-7",
+          "group": "links",
+          "label": "Requesting a GitHub App from your organization owner",
+          "url": "https://docs.github.com/en/apps/using-github-apps/requesting-a-github-app-from-your-organization-owner",
+          "status": "pass",
+          "detail": "Reachable (HTTP 200)."
+        },
+        {
+          "id": "links-8",
+          "group": "links",
+          "label": "About OAuth app access restrictions",
+          "url": "https://docs.github.com/en/organizations/managing-oauth-access-to-your-organizations-data/about-oauth-app-access-restrictions",
+          "status": "pass",
+          "detail": "Reachable (HTTP 200)."
+        },
+        {
+          "id": "links-9",
+          "group": "links",
+          "label": "Best practices for creating a GitHub App",
+          "url": "https://docs.github.com/en/apps/creating-github-apps/about-creating-github-apps/best-practices-for-creating-a-github-app",
+          "status": "pass",
+          "detail": "Reachable (HTTP 200)."
+        },
+        {
+          "id": "links-10",
+          "group": "links",
+          "label": "About GitHub Marketplace for apps",
+          "url": "https://docs.github.com/en/apps/github-marketplace/github-marketplace-overview/about-github-marketplace-for-apps",
+          "status": "pass",
+          "detail": "Reachable (HTTP 200)."
+        },
+        {
+          "id": "links-11",
+          "group": "links",
+          "label": "Requesting organization approval for OAuth apps",
+          "url": "https://docs.github.com/en/account-and-profile/setting-up-and-managing-your-personal-account-on-github/managing-your-membership-in-organizations/requesting-organization-approval-for-oauth-apps",
+          "status": "pass",
+          "detail": "Reachable (HTTP 200)."
+        },
+        {
+          "id": "links-12",
+          "group": "links",
+          "label": "Rate limits for the REST API",
+          "url": "https://docs.github.com/en/rest/using-the-rest-api/rate-limits-for-the-rest-api",
+          "status": "pass",
+          "detail": "Reachable (HTTP 200)."
+        },
+        {
+          "id": "links-13",
+          "group": "links",
+          "label": "Authorizing OAuth apps",
+          "url": "https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/authorizing-oauth-apps",
+          "status": "pass",
+          "detail": "Reachable (HTTP 200)."
+        },
+        {
+          "id": "links-14",
+          "group": "links",
+          "label": "Creating an OAuth app",
+          "url": "https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/creating-an-oauth-app",
+          "status": "pass",
+          "detail": "Reachable (HTTP 200)."
+        },
+        {
+          "id": "links-15",
+          "group": "links",
+          "label": "Composio: Managed auth toolkits",
+          "url": "https://docs.composio.dev/toolkits/managed-auth",
+          "status": "pass",
+          "detail": "Reachable (HTTP 200)."
+        },
+        {
+          "id": "links-16",
+          "group": "links",
+          "label": "Refreshing user access tokens",
+          "url": "https://docs.github.com/en/apps/creating-github-apps/authenticating-with-a-github-app/refreshing-user-access-tokens",
+          "status": "pass",
+          "detail": "Reachable (HTTP 200)."
+        },
+        {
+          "id": "endpoints-1",
+          "group": "endpoints",
+          "label": "Authorize endpoint",
+          "url": "https://github.com/login/oauth/authorize",
+          "status": "pass",
+          "detail": "HTTP 302: redirects to a sign-in page (endpoint exists; the dummy client is challenged at login)."
+        },
+        {
+          "id": "endpoints-2",
+          "group": "endpoints",
+          "label": "PKCE parameters",
+          "url": "https://github.com/login/oauth/authorize",
+          "status": "pass",
+          "detail": "Request with code_challenge/S256 accepted at the transport level (HTTP 302). This confirms the parameters are tolerated, not that PKCE is enforced."
+        },
+        {
+          "id": "endpoints-3",
+          "group": "endpoints",
+          "label": "Token endpoint",
+          "url": "https://github.com/login/oauth/access_token",
+          "status": "warn",
+          "detail": "HTTP 404 to a dummy POST. Some providers (GitHub, for one) answer 404 for an unknown client, so this does not prove the URL is wrong; check it against the cited docs."
+        },
+        {
+          "id": "consistency-1",
+          "group": "consistency",
+          "label": "Difficulty label",
+          "status": "pass",
+          "detail": "Easy matches 2/5."
+        },
+        {
+          "id": "consistency-2",
+          "group": "consistency",
+          "label": "Approval vs calendar time",
+          "status": "pass",
+          "detail": "\"Same day\" is consistent with approval \"none\"."
+        },
+        {
+          "id": "consistency-3",
+          "group": "consistency",
+          "label": "Stage ladder",
+          "status": "pass",
+          "detail": "3 stages from test app to production."
+        },
+        {
+          "id": "consistency-4",
+          "group": "consistency",
+          "label": "Step coverage",
+          "status": "pass",
+          "detail": "9 steps covering prepare → register → configure → test → launch → review."
+        },
+        {
+          "id": "consistency-5",
+          "group": "consistency",
+          "label": "Agent steps explain the help",
+          "status": "pass",
+          "detail": "Every agent-owned step says what the agent produces."
+        },
+        {
+          "id": "consistency-6",
+          "group": "consistency",
+          "label": "Citations resolve",
+          "status": "pass",
+          "detail": "Every citation points at a listed source."
+        },
+        {
+          "id": "consistency-7",
+          "group": "consistency",
+          "label": "\"Tested\" means probed",
+          "status": "pass",
+          "detail": "0 tested step(s) all cite a live probe."
+        },
+        {
+          "id": "consistency-8",
+          "group": "consistency",
+          "label": "Blockers",
+          "status": "pass",
+          "detail": "6 blockers with symptom and fix."
+        },
+        {
+          "id": "catalog-1",
+          "group": "catalog",
+          "label": "Managed OAuth app",
+          "status": "pass",
+          "detail": "Catalog confirms a Composio-managed OAuth app exists."
+        },
+        {
+          "id": "catalog-2",
+          "group": "catalog",
+          "label": "Scopes vs Composio's managed app",
+          "status": "pass",
+          "detail": "1/7 of the scopes Composio's managed app requests appear in the guide (the guide lists the scopes a minimal integration needs, not every scope a full one may ask for). Not in the guide: user, gist, notifications, project…."
+        },
+        {
+          "id": "usability-1",
+          "group": "usability",
+          "label": "Step detail",
+          "status": "pass",
+          "detail": "Every step has concrete instructions."
+        },
+        {
+          "id": "usability-2",
+          "group": "usability",
+          "label": "Exports render",
+          "status": "pass",
+          "detail": "Markdown 17.7k chars, JSON 33.8k chars."
+        }
+      ],
+      "summary": {
+        "pass": 30,
+        "warn": 1,
+        "fail": 0,
+        "skip": 0
+      },
+      "applied": []
+    }
   }
 }

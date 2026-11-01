@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { curated } from "@/data/guides";
 import { listCurated, listGenerated } from "@/lib/store";
 import { DIRECTORY, DIRECTORY_META, normKey } from "@/lib/directory";
 import { EvidenceBadge, OwnerBadge } from "@/components/badges";
@@ -26,19 +25,9 @@ export default async function MethodPage() {
   const byLabel = ["Instant", "Easy", "Moderate", "Hard", "Gated"].map((l) => ({ label: l, n: library.filter((g) => g.verdict.label === l).length }));
   const pct = (n: number, d: number) => `${Math.round((n / d) * 100)}%`;
 
-  const rows = curated
-    .filter((g) => g.meta.verification)
-    .map((g) => {
-      const f = g.meta.verification!.findings;
-      return {
-        slug: g.slug,
-        name: g.name,
-        confirmed: f.filter((x) => x.result === "confirmed").length,
-        corrected: f.filter((x) => x.result === "corrected").length,
-        unverified: f.filter((x) => x.result === "unverified").length,
-        corrections: f.filter((x) => x.result === "corrected"),
-      };
-    });
+  const rows = library
+    .filter((g) => g.stats.verification)
+    .map((g) => ({ slug: g.slug, name: g.name, kind: g.stats.verification_kind, ...g.stats.verification!, corrections: g.corrections }));
   const tot = rows.reduce((a, r) => ({ c: a.c + r.confirmed, x: a.x + r.corrected, u: a.u + r.unverified }), { c: 0, x: 0, u: 0 });
 
   return (
@@ -79,10 +68,11 @@ export default async function MethodPage() {
           <li><b>Read and follow links.</b> Code fetches those pages and drops any that don&apos;t exist, so made-up URLs are never cited. It then collects on-topic links from the pages it read. The model picks the most useful ones over up to two rounds. Pages that only render with JavaScript are read through Gemini&apos;s URL reader, and only URLs the reader actually retrieved are kept.</li>
           <li><b>Live probing.</b> A narrow <code className="text-xs bg-stone-100 px-1 rounded">http_probe</code> (HTTPS GET to public hosts only, no redirects followed, capped response size) fetches OAuth/OIDC discovery documents and hits authorize endpoints with a dummy client. A probe is how a claim earns the &ldquo;tested&rdquo; label without anyone logging in.</li>
           <li><b>Structured synthesis.</b> One schema-constrained model call turns the research notes into a guide. Code then enforces the evidence rules: a claim can only be &ldquo;tested&rdquo; if it cites a probe, and &ldquo;sourced&rdquo; without a resolvable citation becomes &ldquo;inferred&rdquo;.</li>
-          <li><b>Independent verification</b> (curated guides only). A separate agent that didn&apos;t write the draft re-checks the highest-impact claims per guide (currently {rows.length ? Math.round((tot.c + tot.x + tot.u) / rows.length) : 0} on average) against primary sources and the probe log. It corrects errors in place and logs every check.</li>
+          <li><b>Automated verification</b> (every generated guide, right after it is saved). Code re-fetches every cited source and downgrades claims whose sources are gone, re-probes the authorize, token and discovery endpoints the guide names, applies consistency rules (label vs difficulty, approval vs calendar time, step coverage, citations), cross-checks Composio&apos;s catalog for the managed-app flag and default scopes, and smoke-tests the exports. Then a second model that did not write the guide re-checks its five to seven highest-impact claims against freshly fetched page text and either confirms, corrects or marks them unverified. Corrections are applied in place and listed on the guide.</li>
+          <li><b>Independent verification</b> (curated guides). A separate agent that didn&apos;t write the draft re-checks the highest-impact claims per guide against primary sources and the probe log. It corrects errors in place and logs every check. Live-generated guides get the automated version of this (step 5).</li>
         </ol>
         <p className="text-sm text-stone-600">
-          Live guides generated from the search box go through steps 1–4 and are marked &ldquo;agent-generated, not hand-reviewed&rdquo;.
+          Live guides generated from the search box go through steps 1–5 and are marked &ldquo;agent-generated, not hand-reviewed&rdquo;.
           The agent&apos;s full research notes (every page excerpt and probe response) are attached to each generated guide so
           anyone can audit it. The live demo runs on Gemini&apos;s free tier. The same pipeline can run on Claude, with built-in
           web search, by setting <code className="text-xs bg-stone-100 px-1 rounded">ANTHROPIC_API_KEY</code>.
@@ -90,7 +80,7 @@ export default async function MethodPage() {
       </section>
 
       <section className="space-y-4">
-        <h2 className="text-lg font-semibold">Library status</h2>
+        <h2 className="text-lg font-semibold">Library status &amp; verification</h2>
         <p className="text-sm text-stone-600">
           Computed from every guide at the moment you load this page: {curatedList.length} curated and {generatedList.length} agent-generated.
         </p>
@@ -134,18 +124,28 @@ export default async function MethodPage() {
           </div>
         </div>
 
+        <p className="text-sm text-stone-600">
+          {tot.c + tot.x + tot.u > 0 ? (
+            <>
+              {tot.c + tot.x + tot.u} high-impact claims re-checked across {rows.length} guide{rows.length === 1 ? "" : "s"} ({rows.filter((r) => r.kind === "independent").length} by an independent agent, {rows.filter((r) => r.kind === "automated").length} by the automated verifier):{" "}
+              <b className="text-emerald-700">{tot.c} confirmed</b>, <b className="text-amber-700">{tot.x} corrected</b>, <b className="text-stone-700">{tot.u} could not be verified</b>.
+            </>
+          ) : (
+            "No verification records yet."
+          )}
+        </p>
         <div className="overflow-x-auto rounded-xl border border-stone-200 bg-white">
           <table className="w-full text-sm">
             <thead className="bg-stone-50 text-left text-xs text-stone-500">
               <tr>
                 <th className="p-2.5">Guide</th>
-                <th className="p-2.5">Verdict</th>
-                <th className="p-2.5">Steps</th>
-                <th className="p-2.5">Agent / you / wait</th>
-                <th className="p-2.5">Tested / sourced / inferred</th>
-                <th className="p-2.5">Probes</th>
-                <th className="p-2.5">Open questions</th>
                 <th className="p-2.5">Status</th>
+                <th className="p-2.5">Verdict</th>
+                <th className="p-2.5" title="steps an agent can do / you do / wait">Agent · you · wait</th>
+                <th className="p-2.5" title="tested / sourced / inferred">Evidence</th>
+                <th className="p-2.5" title="automated checks: pass / warn / fail">Checks</th>
+                <th className="p-2.5" title="claims re-checked: confirmed / corrected / unverified">Claims</th>
+                <th className="p-2.5">Open</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-stone-100">
@@ -157,63 +157,44 @@ export default async function MethodPage() {
                       {g.name}
                     </Link>
                   </td>
-                  <td className="p-2.5 whitespace-nowrap">{g.verdict.label} · {g.verdict.calendar}</td>
-                  <td className="p-2.5">{g.stats.steps}</td>
-                  <td className="p-2.5 whitespace-nowrap">{g.stats.agent} / {g.stats.you} / {g.stats.wait}</td>
-                  <td className="p-2.5 whitespace-nowrap">{g.stats.tested} / {g.stats.sourced} / {g.stats.inferred}</td>
-                  <td className="p-2.5">{g.stats.probes}</td>
-                  <td className="p-2.5">{g.stats.uncertain}</td>
                   <td className="p-2.5 whitespace-nowrap text-xs">
-                    {g.stats.verified ? <span className="text-emerald-700">curated · verified</span> : g.origin === "curated" ? <span className="text-emerald-700">curated</span> : <span className="text-indigo-700">✦ generated · not hand-reviewed</span>}
+                    {g.origin === "curated" ? <span className="text-emerald-700">curated{g.stats.verification_kind === "independent" ? " · verified" : ""}</span> : <span className="text-indigo-700">✦ generated{g.stats.checks ? " · auto-checked" : " · unchecked"}</span>}
                   </td>
+                  <td className="p-2.5 whitespace-nowrap">{g.verdict.label} · {g.verdict.calendar}</td>
+                  <td className="p-2.5 whitespace-nowrap tabular-nums">{g.stats.agent} · {g.stats.you} · {g.stats.wait} <span className="text-stone-400">/ {g.stats.steps}</span></td>
+                  <td className="p-2.5 whitespace-nowrap tabular-nums"><span className="text-emerald-700">{g.stats.tested}</span> / <span className="text-sky-700">{g.stats.sourced}</span> / <span className="text-stone-500">{g.stats.inferred}</span></td>
+                  <td className="p-2.5 whitespace-nowrap tabular-nums">
+                    {g.stats.checks ? <><span className="text-emerald-700">{g.stats.checks.pass}</span> / <span className="text-amber-700">{g.stats.checks.warn}</span> / <span className="text-rose-700">{g.stats.checks.fail}</span></> : <span className="text-stone-400">—</span>}
+                  </td>
+                  <td className="p-2.5 whitespace-nowrap tabular-nums">
+                    {g.stats.verification ? <><span className="text-emerald-700">{g.stats.verification.confirmed}</span> / <span className="text-amber-700">{g.stats.verification.corrected}</span> / <span className="text-stone-500">{g.stats.verification.unverified}</span></> : <span className="text-stone-400">—</span>}
+                  </td>
+                  <td className="p-2.5 tabular-nums">{g.stats.uncertain}</td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
-      </section>
-
-      <section className="space-y-3">
-        <h2 className="text-lg font-semibold">Verification results</h2>
-        {rows.length === 0 ? (
-          <p className="text-sm text-stone-600">Verification logs are not loaded yet.</p>
-        ) : (
-          <>
-            <p className="text-sm text-stone-600">
-              {tot.c + tot.x + tot.u} high-impact claims re-checked across {rows.length} curated guides: <b className="text-emerald-700">{tot.c} confirmed</b>,{" "}
-              <b className="text-amber-700">{tot.x} corrected</b>, <b className="text-stone-700">{tot.u} could not be verified</b>.
-            </p>
-            <div className="overflow-x-auto rounded-xl border border-stone-200 bg-white">
-              <table className="w-full text-sm">
-                <thead className="bg-stone-50 text-left text-xs text-stone-500">
-                  <tr><th className="p-2.5">Guide</th><th className="p-2.5">Confirmed</th><th className="p-2.5">Corrected</th><th className="p-2.5">Unverified</th></tr>
-                </thead>
-                <tbody className="divide-y divide-stone-100">
-                  {rows.map((r) => (
-                    <tr key={r.slug}>
-                      <td className="p-2.5"><Link className="text-indigo-700 hover:underline" href={`/guides/${r.slug}`}>{r.name}</Link></td>
-                      <td className="p-2.5">{r.confirmed}</td>
-                      <td className="p-2.5">{r.corrected}</td>
-                      <td className="p-2.5">{r.unverified}</td>
-                    </tr>
+        <p className="text-xs text-stone-500">
+          Checks = automated pass / warn / fail. Claims = confirmed / corrected / unverified by an independent re-check. Open = questions the guide leaves unverified.
+        </p>
+        {rows.some((r) => r.corrections.length) && (
+          <div className="space-y-2">
+            <div className="text-sm font-medium">What verification corrected</div>
+            {rows.filter((r) => r.corrections.length).map((r) => (
+              <details key={r.slug} className="rounded-lg border border-amber-200 bg-amber-50/60 p-3 text-sm">
+                <summary className="cursor-pointer font-medium">
+                  <Link href={`/guides/${r.slug}`} className="hover:underline">{r.name}</Link>: {r.corrections.length} correction{r.corrections.length === 1 ? "" : "s"}
+                  <span className="ml-2 text-xs font-normal text-stone-500">{r.kind === "automated" ? "automated re-check" : "independent agent"}</span>
+                </summary>
+                <ul className="mt-2 space-y-2">
+                  {r.corrections.map((c, i) => (
+                    <li key={i}><span className="font-medium">{c.claim}</span><div className="text-stone-700 mt-0.5">{c.note}</div></li>
                   ))}
-                </tbody>
-              </table>
-            </div>
-            <div className="space-y-2">
-              <div className="text-sm font-medium">What verification corrected</div>
-              <ul className="text-sm space-y-2">
-                {rows.flatMap((r) =>
-                  r.corrections.map((c, i) => (
-                    <li key={r.slug + i} className="rounded-lg border border-amber-200 bg-amber-50/60 p-3">
-                      <span className="font-medium">{r.name}:</span> {c.claim}
-                      <div className="text-stone-700 mt-1">{c.note}</div>
-                    </li>
-                  )),
-                )}
-              </ul>
-            </div>
-          </>
+                </ul>
+              </details>
+            ))}
+          </div>
         )}
       </section>
 

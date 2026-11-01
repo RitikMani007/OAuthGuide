@@ -583,6 +583,270 @@
         }
       ]
     },
-    "logo": "https://logos.composio.dev/api/gmail"
+    "logo": "https://logos.composio.dev/api/gmail",
+    "checks": {
+      "date": "2026-11-01",
+      "duration_ms": 5703,
+      "results": [
+        {
+          "id": "links-1",
+          "group": "links",
+          "label": "Verification requirements - Google Cloud Platform Console Help",
+          "url": "https://support.google.com/cloud/answer/13464321",
+          "status": "pass",
+          "detail": "Reachable (HTTP 200)."
+        },
+        {
+          "id": "links-2",
+          "group": "links",
+          "label": "Using OAuth 2.0 to Access Google APIs",
+          "url": "https://developers.google.com/identity/protocols/oauth2",
+          "status": "pass",
+          "detail": "Reachable (HTTP 200)."
+        },
+        {
+          "id": "links-3",
+          "group": "links",
+          "label": "Choose Gmail API scopes",
+          "url": "https://developers.google.com/workspace/gmail/api/auth/scopes",
+          "status": "pass",
+          "detail": "Reachable (HTTP 200)."
+        },
+        {
+          "id": "links-4",
+          "group": "links",
+          "label": "Manage App Audience - Google Cloud Platform Console Help",
+          "url": "https://support.google.com/cloud/answer/15549945",
+          "status": "pass",
+          "detail": "Reachable (HTTP 200)."
+        },
+        {
+          "id": "links-5",
+          "group": "links",
+          "label": "Submit for brand verification",
+          "url": "https://developers.google.com/identity/protocols/oauth2/production-readiness/brand-verification",
+          "status": "pass",
+          "detail": "Reachable (HTTP 200)."
+        },
+        {
+          "id": "links-6",
+          "group": "links",
+          "label": "Restricted scope verification",
+          "url": "https://developers.google.com/identity/protocols/oauth2/production-readiness/restricted-scope-verification",
+          "status": "pass",
+          "detail": "Reachable (HTTP 200)."
+        },
+        {
+          "id": "links-7",
+          "group": "links",
+          "label": "Google Workspace user data and developer policy",
+          "url": "https://developers.google.com/workspace/workspace-api-user-data-developer-policy",
+          "status": "pass",
+          "detail": "Reachable (HTTP 200)."
+        },
+        {
+          "id": "links-8",
+          "group": "links",
+          "label": "Using OAuth 2.0 for Web Server Applications",
+          "url": "https://developers.google.com/identity/protocols/oauth2/web-server",
+          "status": "pass",
+          "detail": "Reachable (HTTP 200)."
+        },
+        {
+          "id": "links-9",
+          "group": "links",
+          "label": "Submitting your app for verification - Google Cloud Platform Console Help",
+          "url": "https://support.google.com/cloud/answer/13461325",
+          "status": "pass",
+          "detail": "Reachable (HTTP 200)."
+        },
+        {
+          "id": "links-10",
+          "group": "links",
+          "label": "Google API Services User Data Policy",
+          "url": "https://developers.google.com/terms/api-services-user-data-policy",
+          "status": "pass",
+          "detail": "Reachable (HTTP 200)."
+        },
+        {
+          "id": "links-11",
+          "group": "links",
+          "label": "Security Assessment - Google Cloud Platform Console Help",
+          "url": "https://support.google.com/cloud/answer/13465431",
+          "status": "pass",
+          "detail": "Reachable (HTTP 200)."
+        },
+        {
+          "id": "links-12",
+          "group": "links",
+          "label": "App verification | Google Health API (assessor fees $500–$4,500; CASA 2–3 weeks Tier 2, 4–6 weeks Tier 3)",
+          "url": "https://developers.google.com/health/app-verification",
+          "status": "pass",
+          "detail": "Reachable (HTTP 200)."
+        },
+        {
+          "id": "links-13",
+          "group": "links",
+          "label": "Google security review (Nango docs)",
+          "url": "https://nango.dev/docs/api-integrations/google-shared/google-security-review",
+          "status": "pass",
+          "detail": "Reachable (HTTP 200)."
+        },
+        {
+          "id": "links-14",
+          "group": "links",
+          "label": "CASA Tier 2 overview - App Defense Alliance",
+          "url": "https://appdefensealliance.dev/casa/tier-2/tier2-overview",
+          "status": "pass",
+          "detail": "Reachable (HTTP 200)."
+        },
+        {
+          "id": "links-15",
+          "group": "links",
+          "label": "Managed OAuth apps - Composio docs",
+          "url": "https://docs.composio.dev/toolkits/managed-auth",
+          "status": "pass",
+          "detail": "Reachable (HTTP 200)."
+        },
+        {
+          "id": "links-16",
+          "group": "links",
+          "label": "Unverified apps - Google Cloud Platform Console Help (100-new-user cap)",
+          "url": "https://support.google.com/cloud/answer/7454865",
+          "status": "pass",
+          "detail": "Reachable (HTTP 200)."
+        },
+        {
+          "id": "endpoints-1",
+          "group": "endpoints",
+          "label": "Authorize endpoint",
+          "url": "https://accounts.google.com/o/oauth2/v2/auth",
+          "status": "pass",
+          "detail": "HTTP 302: redirects to a sign-in page (endpoint exists; the dummy client is challenged at login)."
+        },
+        {
+          "id": "endpoints-2",
+          "group": "endpoints",
+          "label": "PKCE parameters",
+          "url": "https://accounts.google.com/o/oauth2/v2/auth",
+          "status": "pass",
+          "detail": "Request with code_challenge/S256 accepted at the transport level (HTTP 302). This confirms the parameters are tolerated, not that PKCE is enforced."
+        },
+        {
+          "id": "endpoints-3",
+          "group": "endpoints",
+          "label": "Discovery document",
+          "url": "https://accounts.google.com/.well-known/openid-configuration",
+          "status": "pass",
+          "detail": "Found; the authorization endpoint matches the guide."
+        },
+        {
+          "id": "endpoints-4",
+          "group": "endpoints",
+          "label": "PKCE per discovery",
+          "status": "pass",
+          "detail": "Discovery lists plain, S256; consistent with the guide."
+        },
+        {
+          "id": "endpoints-5",
+          "group": "endpoints",
+          "label": "Token endpoint",
+          "url": "https://oauth2.googleapis.com/token",
+          "status": "pass",
+          "detail": "Exists: a dummy code exchange was rejected with an OAuth error (HTTP 401)."
+        },
+        {
+          "id": "consistency-1",
+          "group": "consistency",
+          "label": "Difficulty label",
+          "status": "pass",
+          "detail": "Hard matches 4/5."
+        },
+        {
+          "id": "consistency-2",
+          "group": "consistency",
+          "label": "Approval vs calendar time",
+          "status": "pass",
+          "detail": "\"2–8 weeks\" is consistent with approval \"to-go-public\"."
+        },
+        {
+          "id": "consistency-3",
+          "group": "consistency",
+          "label": "Stage ladder",
+          "status": "pass",
+          "detail": "4 stages from test app to production."
+        },
+        {
+          "id": "consistency-4",
+          "group": "consistency",
+          "label": "Step coverage",
+          "status": "pass",
+          "detail": "13 steps covering prepare → register → configure → test → review → launch."
+        },
+        {
+          "id": "consistency-5",
+          "group": "consistency",
+          "label": "Agent steps explain the help",
+          "status": "pass",
+          "detail": "Every agent-owned step says what the agent produces."
+        },
+        {
+          "id": "consistency-6",
+          "group": "consistency",
+          "label": "Citations resolve",
+          "status": "pass",
+          "detail": "Every citation points at a listed source."
+        },
+        {
+          "id": "consistency-7",
+          "group": "consistency",
+          "label": "\"Tested\" means probed",
+          "status": "pass",
+          "detail": "0 tested step(s) all cite a live probe."
+        },
+        {
+          "id": "consistency-8",
+          "group": "consistency",
+          "label": "Blockers",
+          "status": "pass",
+          "detail": "6 blockers with symptom and fix."
+        },
+        {
+          "id": "catalog-1",
+          "group": "catalog",
+          "label": "Managed OAuth app",
+          "status": "pass",
+          "detail": "Catalog confirms a Composio-managed OAuth app exists."
+        },
+        {
+          "id": "catalog-2",
+          "group": "catalog",
+          "label": "Scopes vs Composio's managed app",
+          "status": "pass",
+          "detail": "1/11 of the scopes Composio's managed app requests appear in the guide (the guide lists the scopes a minimal integration needs, not every scope a full one may ask for). Not in the guide: https://www.googleapis.com/auth/userinfo.profile, https://www.googleapis.com/auth/userinfo.email, https://www.googleapis.com/auth/contacts.readonly, https://www.googleapis.com/auth/contacts.other.readonly…."
+        },
+        {
+          "id": "usability-1",
+          "group": "usability",
+          "label": "Step detail",
+          "status": "pass",
+          "detail": "Every step has concrete instructions."
+        },
+        {
+          "id": "usability-2",
+          "group": "usability",
+          "label": "Exports render",
+          "status": "pass",
+          "detail": "Markdown 23.0k chars, JSON 39.2k chars."
+        }
+      ],
+      "summary": {
+        "pass": 33,
+        "warn": 0,
+        "fail": 0,
+        "skip": 0
+      },
+      "applied": []
+    }
   }
 }

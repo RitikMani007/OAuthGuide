@@ -519,6 +519,223 @@
         }
       ]
     },
-    "logo": "https://logos.composio.dev/api/outlook"
+    "logo": "https://logos.composio.dev/api/outlook",
+    "checks": {
+      "date": "2026-11-01",
+      "duration_ms": 1605,
+      "results": [
+        {
+          "id": "links-1",
+          "group": "links",
+          "label": "How to Register an App in Microsoft Entra ID - Microsoft identity platform",
+          "url": "https://learn.microsoft.com/en-us/entra/identity-platform/quickstart-register-app",
+          "status": "pass",
+          "detail": "Reachable (HTTP 200)."
+        },
+        {
+          "id": "links-2",
+          "group": "links",
+          "label": "Publisher verification overview - Microsoft identity platform",
+          "url": "https://learn.microsoft.com/en-us/entra/identity-platform/publisher-verification-overview",
+          "status": "pass",
+          "detail": "Reachable (HTTP 200)."
+        },
+        {
+          "id": "links-3",
+          "group": "links",
+          "label": "Redirect URI (reply URL) best practices and limitations - Microsoft identity platform",
+          "url": "https://learn.microsoft.com/en-us/entra/identity-platform/reply-url",
+          "status": "pass",
+          "detail": "Reachable (HTTP 200)."
+        },
+        {
+          "id": "links-4",
+          "group": "links",
+          "label": "Add and manage app credentials in Microsoft Entra ID",
+          "url": "https://learn.microsoft.com/en-us/entra/identity-platform/how-to-add-credentials",
+          "status": "pass",
+          "detail": "Reachable (HTTP 200)."
+        },
+        {
+          "id": "links-5",
+          "group": "links",
+          "label": "Mark an app as publisher verified - Microsoft identity platform",
+          "url": "https://learn.microsoft.com/en-us/entra/identity-platform/mark-app-as-publisher-verified",
+          "status": "pass",
+          "detail": "Reachable (HTTP 200)."
+        },
+        {
+          "id": "links-6",
+          "group": "links",
+          "label": "Refresh tokens in the Microsoft identity platform",
+          "url": "https://learn.microsoft.com/en-us/entra/identity-platform/refresh-tokens",
+          "status": "pass",
+          "detail": "Reachable (HTTP 200)."
+        },
+        {
+          "id": "links-7",
+          "group": "links",
+          "label": "Manage app consent policies - Microsoft Entra ID (Microsoft recommended user consent policy)",
+          "url": "https://learn.microsoft.com/en-us/entra/identity/enterprise-apps/manage-app-consent-policies",
+          "status": "pass",
+          "detail": "Reachable (HTTP 200)."
+        },
+        {
+          "id": "links-8",
+          "group": "links",
+          "label": "Microsoft Graph permissions reference",
+          "url": "https://learn.microsoft.com/en-us/graph/permissions-reference",
+          "status": "pass",
+          "detail": "Reachable (HTTP 200)."
+        },
+        {
+          "id": "links-9",
+          "group": "links",
+          "label": "Microsoft identity platform and OAuth 2.0 authorization code flow",
+          "url": "https://learn.microsoft.com/en-us/entra/identity-platform/v2-oauth2-auth-code-flow",
+          "status": "pass",
+          "detail": "Reachable (HTTP 200)."
+        },
+        {
+          "id": "links-10",
+          "group": "links",
+          "label": "Configure How Users Consent to Applications - Microsoft Entra ID",
+          "url": "https://learn.microsoft.com/en-us/entra/identity/enterprise-apps/configure-user-consent",
+          "status": "pass",
+          "detail": "Reachable (HTTP 200)."
+        },
+        {
+          "id": "links-11",
+          "group": "links",
+          "label": "Microsoft 365 App Compliance Program overview",
+          "url": "https://learn.microsoft.com/en-us/microsoft-365-app-certification/overview",
+          "status": "pass",
+          "detail": "Reachable (HTTP 200)."
+        },
+        {
+          "id": "links-12",
+          "group": "links",
+          "label": "Managed OAuth apps - Composio docs",
+          "url": "https://docs.composio.dev/toolkits/managed-auth",
+          "status": "pass",
+          "detail": "Reachable (HTTP 200)."
+        },
+        {
+          "id": "endpoints-1",
+          "group": "endpoints",
+          "label": "Authorize endpoint",
+          "url": "https://login.microsoftonline.com/common/oauth2/v2.0/authorize",
+          "status": "pass",
+          "detail": "HTTP 200: returns an error page for the unknown client (endpoint exists)."
+        },
+        {
+          "id": "endpoints-2",
+          "group": "endpoints",
+          "label": "PKCE parameters",
+          "url": "https://login.microsoftonline.com/common/oauth2/v2.0/authorize",
+          "status": "pass",
+          "detail": "Request with code_challenge/S256 accepted at the transport level (HTTP 200). This confirms the parameters are tolerated, not that PKCE is enforced."
+        },
+        {
+          "id": "endpoints-3",
+          "group": "endpoints",
+          "label": "Token endpoint",
+          "url": "https://login.microsoftonline.com/common/oauth2/v2.0/token",
+          "status": "pass",
+          "detail": "Exists: a dummy code exchange was rejected with an OAuth error (HTTP 400)."
+        },
+        {
+          "id": "consistency-1",
+          "group": "consistency",
+          "label": "Difficulty label",
+          "status": "pass",
+          "detail": "Moderate matches 3/5."
+        },
+        {
+          "id": "consistency-2",
+          "group": "consistency",
+          "label": "Approval vs calendar time",
+          "status": "warn",
+          "detail": "Approval is \"none\" but calendar time is \"1 day–2 weeks\". Check the time note explains what the wait is."
+        },
+        {
+          "id": "consistency-3",
+          "group": "consistency",
+          "label": "Stage ladder",
+          "status": "pass",
+          "detail": "4 stages from test app to production."
+        },
+        {
+          "id": "consistency-4",
+          "group": "consistency",
+          "label": "Step coverage",
+          "status": "pass",
+          "detail": "12 steps covering prepare → register → configure → test → review → launch."
+        },
+        {
+          "id": "consistency-5",
+          "group": "consistency",
+          "label": "Agent steps explain the help",
+          "status": "pass",
+          "detail": "Every agent-owned step says what the agent produces."
+        },
+        {
+          "id": "consistency-6",
+          "group": "consistency",
+          "label": "Citations resolve",
+          "status": "pass",
+          "detail": "Every citation points at a listed source."
+        },
+        {
+          "id": "consistency-7",
+          "group": "consistency",
+          "label": "\"Tested\" means probed",
+          "status": "pass",
+          "detail": "0 tested step(s) all cite a live probe."
+        },
+        {
+          "id": "consistency-8",
+          "group": "consistency",
+          "label": "Blockers",
+          "status": "pass",
+          "detail": "6 blockers with symptom and fix."
+        },
+        {
+          "id": "catalog-1",
+          "group": "catalog",
+          "label": "Managed OAuth app",
+          "status": "pass",
+          "detail": "Catalog confirms a Composio-managed OAuth app exists."
+        },
+        {
+          "id": "catalog-2",
+          "group": "catalog",
+          "label": "Scopes vs Composio's managed app",
+          "status": "pass",
+          "detail": "7/12 of the scopes Composio's managed app requests appear in the guide (the guide lists the scopes a minimal integration needs, not every scope a full one may ask for). Not in the guide: Calendars.ReadWrite.Shared, Contacts.ReadWrite, Chat.ReadWrite, MailboxSettings.Read…."
+        },
+        {
+          "id": "usability-1",
+          "group": "usability",
+          "label": "Step detail",
+          "status": "pass",
+          "detail": "Every step has concrete instructions."
+        },
+        {
+          "id": "usability-2",
+          "group": "usability",
+          "label": "Exports render",
+          "status": "pass",
+          "detail": "Markdown 20.9k chars, JSON 35.9k chars."
+        }
+      ],
+      "summary": {
+        "pass": 26,
+        "warn": 1,
+        "fail": 0,
+        "skip": 0
+      },
+      "applied": []
+    }
   }
 }

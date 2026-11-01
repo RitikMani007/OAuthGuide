@@ -13,6 +13,10 @@ export function guideToMarkdown(g: StoredGuide, url?: string): string {
     `**Most likely blocker:** ${g.verdict.headline_blocker}`,
     "",
   );
+  if (g.meta.checks) {
+    const c = g.meta.checks.summary;
+    L.push(`**Automated checks (${g.meta.checks.date}):** ${c.pass} pass · ${c.warn} warn · ${c.fail} fail${g.meta.verification?.kind === "automated" ? ` · ${g.meta.verification.findings.length} claims re-checked` : ""}`, "");
+  }
   L.push("## Stages");
   g.stages.forEach((s, i) => L.push(`${i + 1}. **${s.name}**: ${s.what_you_get} _(How to get here: ${s.how_to_reach})_`));
   L.push("", "## Steps");

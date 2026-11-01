@@ -501,6 +501,231 @@
         }
       ]
     },
-    "logo": "https://logos.composio.dev/api/slack"
+    "logo": "https://logos.composio.dev/api/slack",
+    "checks": {
+      "date": "2026-11-01",
+      "duration_ms": 4347,
+      "results": [
+        {
+          "id": "links-1",
+          "group": "links",
+          "label": "Managed auth | Composio",
+          "url": "https://docs.composio.dev/toolkits/managed-auth",
+          "status": "pass",
+          "detail": "Reachable (HTTP 200)."
+        },
+        {
+          "id": "links-2",
+          "group": "links",
+          "label": "Rate limit changes for non-Marketplace apps (changelog, 2025-05-29)",
+          "url": "https://docs.slack.dev/changelog/2025/05/29/rate-limit-changes-for-non-marketplace-apps",
+          "status": "pass",
+          "detail": "Reachable (HTTP 200)."
+        },
+        {
+          "id": "links-3",
+          "group": "links",
+          "label": "Installing with OAuth",
+          "url": "https://docs.slack.dev/authentication/installing-with-oauth",
+          "status": "pass",
+          "detail": "Reachable (HTTP 200)."
+        },
+        {
+          "id": "links-4",
+          "group": "links",
+          "label": "Configuring apps with app manifests",
+          "url": "https://docs.slack.dev/app-manifests/configuring-apps-with-app-manifests",
+          "status": "pass",
+          "detail": "Reachable (HTTP 200)."
+        },
+        {
+          "id": "links-5",
+          "group": "links",
+          "label": "Slack Marketplace review guide",
+          "url": "https://docs.slack.dev/slack-marketplace/slack-marketplace-review-guide",
+          "status": "pass",
+          "detail": "Reachable (HTTP 200)."
+        },
+        {
+          "id": "links-6",
+          "group": "links",
+          "label": "Slack Marketplace app guidelines and requirements",
+          "url": "https://docs.slack.dev/slack-marketplace/slack-marketplace-app-guidelines-and-requirements",
+          "status": "pass",
+          "detail": "Reachable (HTTP 200)."
+        },
+        {
+          "id": "links-7",
+          "group": "links",
+          "label": "Using token rotation",
+          "url": "https://docs.slack.dev/authentication/using-token-rotation",
+          "status": "pass",
+          "detail": "Reachable (HTTP 200)."
+        },
+        {
+          "id": "links-8",
+          "group": "links",
+          "label": "Distributing your app",
+          "url": "https://docs.slack.dev/app-management/distribution",
+          "status": "pass",
+          "detail": "Reachable (HTTP 200)."
+        },
+        {
+          "id": "links-9",
+          "group": "links",
+          "label": "Slack API Terms of Service (effective 10 Oct 2025)",
+          "url": "https://slack.com/terms-of-service/api",
+          "status": "pass",
+          "detail": "Reachable (HTTP 200)."
+        },
+        {
+          "id": "links-10",
+          "group": "links",
+          "label": "PKCE generally available (changelog, 2026-03-30)",
+          "url": "https://docs.slack.dev/changelog/2026/03/30/pkce",
+          "status": "pass",
+          "detail": "Reachable (HTTP 200)."
+        },
+        {
+          "id": "links-11",
+          "group": "links",
+          "label": "conversations.history method reference",
+          "url": "https://docs.slack.dev/reference/methods/conversations.history",
+          "status": "pass",
+          "detail": "Reachable (HTTP 200)."
+        },
+        {
+          "id": "links-12",
+          "group": "links",
+          "label": "Dust: Slack Terms of Service update and API changes",
+          "url": "https://dust-tt.notion.site/Slack-Terms-of-Service-update-and-API-Changes-21728599d94180f3b2b4e892e6d20af6",
+          "status": "pass",
+          "detail": "Reachable (HTTP 200)."
+        },
+        {
+          "id": "endpoints-1",
+          "group": "endpoints",
+          "label": "Authorize endpoint",
+          "url": "https://slack.com/oauth/v2/authorize",
+          "status": "pass",
+          "detail": "HTTP 200: serves a page (endpoint exists)."
+        },
+        {
+          "id": "endpoints-2",
+          "group": "endpoints",
+          "label": "PKCE parameters",
+          "url": "https://slack.com/oauth/v2/authorize",
+          "status": "pass",
+          "detail": "Request with code_challenge/S256 accepted at the transport level (HTTP 200). This confirms the parameters are tolerated, not that PKCE is enforced."
+        },
+        {
+          "id": "endpoints-3",
+          "group": "endpoints",
+          "label": "Discovery document",
+          "url": "https://slack.com/.well-known/openid-configuration",
+          "status": "warn",
+          "detail": "Publishes authorization_endpoint https://slack.com/openid/connect/authorize, but the guide's authorize URL is https://slack.com/oauth/v2/authorize. It likely describes a different flow (such as OIDC sign-in), so it was not used to check PKCE or the token endpoint."
+        },
+        {
+          "id": "endpoints-4",
+          "group": "endpoints",
+          "label": "Token endpoint",
+          "url": "https://slack.com/api/oauth.v2.access",
+          "status": "pass",
+          "detail": "Exists (HTTP 200 to a dummy POST)."
+        },
+        {
+          "id": "consistency-1",
+          "group": "consistency",
+          "label": "Difficulty label",
+          "status": "pass",
+          "detail": "Hard matches 4/5."
+        },
+        {
+          "id": "consistency-2",
+          "group": "consistency",
+          "label": "Approval vs calendar time",
+          "status": "pass",
+          "detail": "\"2–4 months\" is consistent with approval \"to-go-public\"."
+        },
+        {
+          "id": "consistency-3",
+          "group": "consistency",
+          "label": "Stage ladder",
+          "status": "pass",
+          "detail": "3 stages from test app to production."
+        },
+        {
+          "id": "consistency-4",
+          "group": "consistency",
+          "label": "Step coverage",
+          "status": "pass",
+          "detail": "10 steps covering prepare → register → configure → test → launch → review."
+        },
+        {
+          "id": "consistency-5",
+          "group": "consistency",
+          "label": "Agent steps explain the help",
+          "status": "pass",
+          "detail": "Every agent-owned step says what the agent produces."
+        },
+        {
+          "id": "consistency-6",
+          "group": "consistency",
+          "label": "Citations resolve",
+          "status": "pass",
+          "detail": "Every citation points at a listed source."
+        },
+        {
+          "id": "consistency-7",
+          "group": "consistency",
+          "label": "\"Tested\" means probed",
+          "status": "pass",
+          "detail": "0 tested step(s) all cite a live probe."
+        },
+        {
+          "id": "consistency-8",
+          "group": "consistency",
+          "label": "Blockers",
+          "status": "pass",
+          "detail": "6 blockers with symptom and fix."
+        },
+        {
+          "id": "catalog-1",
+          "group": "catalog",
+          "label": "Managed OAuth app",
+          "status": "pass",
+          "detail": "Catalog confirms a Composio-managed OAuth app exists."
+        },
+        {
+          "id": "catalog-2",
+          "group": "catalog",
+          "label": "Scopes vs Composio's managed app",
+          "status": "pass",
+          "detail": "12/44 of the scopes Composio's managed app requests appear in the guide (the guide lists the scopes a minimal integration needs, not every scope a full one may ask for). Not in the guide: calls:read, calls:write, channels:write, dnd:read…."
+        },
+        {
+          "id": "usability-1",
+          "group": "usability",
+          "label": "Step detail",
+          "status": "pass",
+          "detail": "Every step has concrete instructions."
+        },
+        {
+          "id": "usability-2",
+          "group": "usability",
+          "label": "Exports render",
+          "status": "pass",
+          "detail": "Markdown 19.4k chars, JSON 33.7k chars."
+        }
+      ],
+      "summary": {
+        "pass": 27,
+        "warn": 1,
+        "fail": 0,
+        "skip": 0
+      },
+      "applied": []
+    }
   }
 }

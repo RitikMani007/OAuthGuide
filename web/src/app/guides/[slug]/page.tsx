@@ -50,7 +50,14 @@ export default async function GuidePage({ params }: Props) {
           <span>{g.category}</span>
           <span className="ml-auto">
             {g.meta.origin === "generated" ? (
-              <span className="text-indigo-700">✦ Agent-generated {fmtDate(g.meta.generated_at)} · not hand-reviewed</span>
+              <span className="text-indigo-700">
+                ✦ Agent-generated {fmtDate(g.meta.generated_at)} ·{" "}
+                {g.meta.checks ? (
+                  <>auto-checked: {g.meta.checks.summary.pass} pass, {g.meta.checks.summary.warn} warn, {g.meta.checks.summary.fail} fail{g.meta.verification?.kind === "automated" ? `, ${g.meta.verification.findings.length} claims re-checked` : ""} · not hand-reviewed</>
+                ) : (
+                  <>not yet checked</>
+                )}
+              </span>
             ) : (
               <span className="text-emerald-700">Curated · researched by agents, spot-checked {g.meta.verification ? fmtDate(g.meta.verification.date) : fmtDate(g.meta.generated_at)}</span>
             )}
@@ -214,15 +221,27 @@ export default async function GuidePage({ params }: Props) {
       {/* Evidence */}
       <Section title="How much to trust this guide" kicker={`${counts.tested} tested · ${counts.sourced} sourced · ${counts.inferred} inferred claims`}>
         <EvidenceBar counts={counts} />
+        {g.meta.checks && <ChecksPanel checks={g.meta.checks} slug={g.slug} />}
+        {!g.meta.checks && (
+          <div className="mt-4 no-print text-sm text-stone-600">
+            This guide has not been through the automated checks yet.{" "}
+            <Link href={`/generate?verify=${g.slug}`} className="text-indigo-700 underline">Run them now</Link>
+          </div>
+        )}
         {g.meta.verification && (
-          <div className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50/50 p-4">
-            <div className="font-medium text-sm">Verification log · {fmtDate(g.meta.verification.date)}</div>
+          <div className={`mt-4 rounded-xl border p-4 ${(g.meta.verification.kind ?? "independent") === "independent" ? "border-emerald-200 bg-emerald-50/50" : "border-indigo-200 bg-indigo-50/40"}`}>
+            <div className="font-medium text-sm">
+              {(g.meta.verification.kind ?? "independent") === "independent" ? "Independent verification log" : "Automated claim re-check"} · {fmtDate(g.meta.verification.date)}
+            </div>
             <div className="text-xs text-stone-600 mt-0.5">{g.meta.verification.method}</div>
             <ul className="mt-3 space-y-2 text-sm">
               {g.meta.verification.findings.map((f, i) => (
                 <li key={i} className="flex gap-2">
                   <span className={`shrink-0 rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase h-fit ${f.result === "confirmed" ? "bg-emerald-100 text-emerald-800" : f.result === "corrected" ? "bg-amber-100 text-amber-800" : "bg-stone-200 text-stone-700"}`}>{f.result}</span>
-                  <span><b>{f.claim}</b>: {f.note}</span>
+                  <span>
+                    <b>{f.claim}</b>: {f.note}
+                    {f.quote && <span className="block text-xs italic text-stone-500 mt-0.5">&ldquo;{f.quote}&rdquo;</span>}
+                  </span>
                 </li>
               ))}
             </ul>
@@ -336,3 +355,79 @@ function TierPill({ tier }: { tier: string }) {
 function fmtDate(iso: string) {
   return new Date(iso).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
 }
+
+const GROUP_TITLE: Record<string, string> = {
+  links: "Sources re-fetched",
+  endpoints: "Live endpoints",
+  consistency: "Consistency rules",
+  catalog: "Composio catalog",
+  usability: "Usability & exports",
+  claims: "Independent claim re-check",
+};
+const STATUS_CLS: Record<string, string> = {
+  pass: "bg-emerald-100 text-emerald-800",
+  warn: "bg-amber-100 text-amber-800",
+  fail: "bg-rose-100 text-rose-800",
+  skip: "bg-stone-100 text-stone-600",
+};
+const STATUS_ICON: Record<string, string> = { pass: "✓", warn: "!", fail: "✕", skip: "–" };
+
+function ChecksPanel({ checks, slug }: { checks: NonNullable<StoredGuide["meta"]["checks"]>; slug: string }) {
+  const groups = [...new Set(checks.results.map((r) => r.group))];
+  const s = checks.summary;
+  return (
+    <div className="mt-4 rounded-xl border border-stone-200 bg-white p-4">
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+        <div>
+          <div className="font-medium text-sm">Automated checks · {fmtDate(checks.date)}</div>
+          <div className="text-xs text-stone-600">
+            {checks.results.length} checks in {(checks.duration_ms / 1000).toFixed(0)}s: sources re-fetched, endpoints probed, consistency and catalog rules, export smoke test.
+          </div>
+        </div>
+        <div className="ml-auto flex gap-1.5 text-xs">
+          <span className={`rounded-full px-2 py-0.5 ${STATUS_CLS.pass}`}>{s.pass} pass</span>
+          <span className={`rounded-full px-2 py-0.5 ${STATUS_CLS.warn}`}>{s.warn} warn</span>
+          <span className={`rounded-full px-2 py-0.5 ${STATUS_CLS.fail}`}>{s.fail} fail</span>
+          {s.skip > 0 && <span className={`rounded-full px-2 py-0.5 ${STATUS_CLS.skip}`}>{s.skip} skipped</span>}
+        </div>
+      </div>
+      {checks.applied.length > 0 && (
+        <div className="mt-3 rounded-lg bg-amber-50 border border-amber-200 p-3 text-sm">
+          <div className="font-medium text-amber-900 text-xs uppercase tracking-wide">Edits the verifier applied</div>
+          <ul className="mt-1 list-disc pl-5 space-y-0.5 text-amber-950">{checks.applied.map((a, i) => <li key={i}>{a}</li>)}</ul>
+        </div>
+      )}
+      <div className="mt-3 grid sm:grid-cols-2 gap-2">
+        {groups.map((grp) => {
+          const rows = checks.results.filter((r) => r.group === grp);
+          const worst = rows.some((r) => r.status === "fail") ? "fail" : rows.some((r) => r.status === "warn") ? "warn" : rows.every((r) => r.status === "skip") ? "skip" : "pass";
+          return (
+            <details key={grp} className="rounded-lg border border-stone-200 p-3 text-sm group">
+              <summary className="cursor-pointer flex items-center gap-2">
+                <span className={`inline-flex h-4 w-4 items-center justify-center rounded-full text-[10px] font-bold ${STATUS_CLS[worst]}`}>{STATUS_ICON[worst]}</span>
+                <span className="font-medium">{GROUP_TITLE[grp] ?? grp}</span>
+                <span className="ml-auto text-xs text-stone-500">{rows.length}</span>
+              </summary>
+              <ul className="mt-2 space-y-1.5">
+                {rows.map((r) => (
+                  <li key={r.id} className="flex gap-2">
+                    <span className={`mt-0.5 inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full text-[10px] font-bold ${STATUS_CLS[r.status]}`}>{STATUS_ICON[r.status]}</span>
+                    <span className="min-w-0">
+                      <span className="font-medium">{r.label}</span>
+                      {r.url && <a href={r.url} target="_blank" rel="noopener noreferrer" className="ml-1 text-xs text-stone-400 hover:text-indigo-700 break-all">{r.url.replace(/^https?:\/\//, "").slice(0, 70)}</a>}
+                      <span className="block text-xs text-stone-600">{r.detail}</span>
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </details>
+          );
+        })}
+      </div>
+      <div className="mt-3 no-print text-xs">
+        <Link href={`/generate?verify=${slug}`} className="text-indigo-700 underline">Re-run the checks</Link>
+      </div>
+    </div>
+  );
+}
+

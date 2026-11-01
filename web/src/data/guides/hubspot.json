@@ -46,7 +46,7 @@
     "authorize_url": "https://app.hubspot.com/oauth/authorize",
     "token_url": "https://api.hubapi.com/oauth/v3/token",
     "redirect_uri_rules": "Set in app-hsmeta.json under `auth.redirectUrls`. You need at least one. They must use HTTPS, except `http://localhost`, which is allowed for testing. The redirect_uri sent at token exchange and refresh must match the one used at authorization. No documented maximum count.",
-    "pkce": "Unknown. Not mentioned in the OAuth quickstart, which describes only the standard authorization-code grant with client secret.",
+    "pkce": "Supported (S256, per the provider's discovery document)",
     "refresh_tokens": "Issued. Access tokens expire after 30 minutes (expires_in 1800). Refresh at /oauth/v3/token with grant_type=refresh_token. Refresh tokens appear long-lived (valid until the app is uninstalled), but the docs reviewed don't state a lifetime or rotation policy, so always persist whatever refresh_token comes back.",
     "notes": [
       "The `scope` param must contain all requiredScopes (space-separated, %20). `optional_scope` lists scopes that are silently dropped if the portal's product tier lacks them.",
@@ -505,6 +505,253 @@
         }
       ]
     },
-    "logo": "https://logos.composio.dev/api/hubspot"
+    "logo": "https://logos.composio.dev/api/hubspot",
+    "checks": {
+      "date": "2026-11-01",
+      "duration_ms": 3880,
+      "results": [
+        {
+          "id": "links-1",
+          "group": "links",
+          "label": "New marketplace distribution app install limits (changelog)",
+          "url": "https://developers.hubspot.com/changelog/new-marketplace-distribution-app-install-limits",
+          "status": "pass",
+          "detail": "Reachable (HTTP 200)."
+        },
+        {
+          "id": "links-2",
+          "group": "links",
+          "label": "Manage apps in HubSpot",
+          "url": "https://developers.hubspot.com/docs/apps/developer-platform/build-apps/manage-apps-in-hubspot",
+          "status": "pass",
+          "detail": "Reachable (HTTP 200)."
+        },
+        {
+          "id": "links-3",
+          "group": "links",
+          "label": "Create an app",
+          "url": "https://developers.hubspot.com/docs/apps/developer-platform/build-apps/create-an-app",
+          "status": "pass",
+          "detail": "Reachable (HTTP 200)."
+        },
+        {
+          "id": "links-4",
+          "group": "links",
+          "label": "OAuth quickstart guide",
+          "url": "https://developers.hubspot.com/docs/apps/developer-platform/build-apps/authentication/oauth/oauth-quickstart-guide",
+          "status": "pass",
+          "detail": "Reachable (HTTP 200)."
+        },
+        {
+          "id": "links-5",
+          "group": "links",
+          "label": "App configuration (app-hsmeta.json)",
+          "url": "https://developers.hubspot.com/docs/apps/developer-platform/build-apps/app-configuration",
+          "status": "pass",
+          "detail": "Reachable (HTTP 200)."
+        },
+        {
+          "id": "links-6",
+          "group": "links",
+          "label": "App Marketplace listing requirements",
+          "url": "https://developers.hubspot.com/docs/apps/developer-platform/list-apps/listing-your-app/app-marketplace-listing-requirements",
+          "status": "pass",
+          "detail": "Reachable (HTTP 200)."
+        },
+        {
+          "id": "links-7",
+          "group": "links",
+          "label": "Managed auth | Composio",
+          "url": "https://docs.composio.dev/toolkits/managed-auth",
+          "status": "pass",
+          "detail": "Reachable (HTTP 200)."
+        },
+        {
+          "id": "links-8",
+          "group": "links",
+          "label": "Legacy developer accounts migration (changelog)",
+          "url": "https://developers.hubspot.com/changelog/legacy-developer-accounts-migration",
+          "status": "pass",
+          "detail": "Reachable (HTTP 200)."
+        },
+        {
+          "id": "links-9",
+          "group": "links",
+          "label": "Legacy public app creation sunset (changelog)",
+          "url": "https://developers.hubspot.com/changelog/legacy-public-app-creation-sunset",
+          "status": "pass",
+          "detail": "Reachable (HTTP 200)."
+        },
+        {
+          "id": "links-10",
+          "group": "links",
+          "label": "Migrate an app: overview",
+          "url": "https://developers.hubspot.com/docs/apps/developer-platform/build-apps/migrate-an-app/overview",
+          "status": "pass",
+          "detail": "Reachable (HTTP 200)."
+        },
+        {
+          "id": "links-11",
+          "group": "links",
+          "label": "New confirmation step for unverified third-party app installs (changelog)",
+          "url": "https://developers.hubspot.com/changelog/new-confirmation-step-for-unverified-third-party-app-installs",
+          "status": "pass",
+          "detail": "Reachable (HTTP 200)."
+        },
+        {
+          "id": "links-12",
+          "group": "links",
+          "label": "HubSpot Community: AI Connector as legacy public app - install limitation",
+          "url": "https://community.hubspot.com/t/ai-connector-as-legacy-public-app-install-limitation/148177",
+          "status": "warn",
+          "detail": "HTTP 403: the site blocks automated readers, so the page exists but its text could not be re-read."
+        },
+        {
+          "id": "links-13",
+          "group": "links",
+          "label": "Legacy APIs and legacy apps: what's going unsupported and when (changelog)",
+          "url": "https://developers.hubspot.com/changelog/legacy-apis-and-legacy-apps-whats-going-unsupported-and-when",
+          "status": "pass",
+          "detail": "Reachable (HTTP 200)."
+        },
+        {
+          "id": "endpoints-1",
+          "group": "endpoints",
+          "label": "Authorize endpoint",
+          "url": "https://app.hubspot.com/oauth/authorize",
+          "status": "pass",
+          "detail": "HTTP 200: returns an error page for the unknown client (endpoint exists)."
+        },
+        {
+          "id": "endpoints-2",
+          "group": "endpoints",
+          "label": "PKCE parameters",
+          "url": "https://app.hubspot.com/oauth/authorize",
+          "status": "pass",
+          "detail": "Request with code_challenge/S256 accepted at the transport level (HTTP 200). This confirms the parameters are tolerated, not that PKCE is enforced."
+        },
+        {
+          "id": "endpoints-3",
+          "group": "endpoints",
+          "label": "Discovery document",
+          "url": "https://app.hubspot.com/.well-known/oauth-authorization-server",
+          "status": "pass",
+          "detail": "Found; the authorization endpoint matches the guide."
+        },
+        {
+          "id": "endpoints-4",
+          "group": "endpoints",
+          "label": "PKCE per discovery",
+          "status": "pass",
+          "detail": "Discovery lists S256; consistent with the guide."
+        },
+        {
+          "id": "endpoints-5",
+          "group": "endpoints",
+          "label": "Token endpoint vs discovery",
+          "status": "warn",
+          "detail": "Discovery says https://api.hubapi.com/oauth/v1/token; the guide says https://api.hubapi.com/oauth/v3/token."
+        },
+        {
+          "id": "endpoints-6",
+          "group": "endpoints",
+          "label": "Token endpoint",
+          "url": "https://api.hubapi.com/oauth/v3/token",
+          "status": "pass",
+          "detail": "Exists: a dummy code exchange was rejected with an OAuth error (HTTP 400)."
+        },
+        {
+          "id": "consistency-1",
+          "group": "consistency",
+          "label": "Difficulty label",
+          "status": "pass",
+          "detail": "Moderate matches 3/5."
+        },
+        {
+          "id": "consistency-2",
+          "group": "consistency",
+          "label": "Approval vs calendar time",
+          "status": "pass",
+          "detail": "\"3–10 weeks\" is consistent with approval \"to-go-public\"."
+        },
+        {
+          "id": "consistency-3",
+          "group": "consistency",
+          "label": "Stage ladder",
+          "status": "pass",
+          "detail": "4 stages from test app to production."
+        },
+        {
+          "id": "consistency-4",
+          "group": "consistency",
+          "label": "Step coverage",
+          "status": "pass",
+          "detail": "10 steps covering prepare → register → configure → test → launch → review."
+        },
+        {
+          "id": "consistency-5",
+          "group": "consistency",
+          "label": "Agent steps explain the help",
+          "status": "pass",
+          "detail": "Every agent-owned step says what the agent produces."
+        },
+        {
+          "id": "consistency-6",
+          "group": "consistency",
+          "label": "Citations resolve",
+          "status": "pass",
+          "detail": "Every citation points at a listed source."
+        },
+        {
+          "id": "consistency-7",
+          "group": "consistency",
+          "label": "\"Tested\" means probed",
+          "status": "pass",
+          "detail": "0 tested step(s) all cite a live probe."
+        },
+        {
+          "id": "consistency-8",
+          "group": "consistency",
+          "label": "Blockers",
+          "status": "pass",
+          "detail": "6 blockers with symptom and fix."
+        },
+        {
+          "id": "catalog-1",
+          "group": "catalog",
+          "label": "Managed OAuth app",
+          "status": "pass",
+          "detail": "Catalog confirms a Composio-managed OAuth app exists."
+        },
+        {
+          "id": "catalog-2",
+          "group": "catalog",
+          "label": "Scopes vs Composio's managed app",
+          "status": "pass",
+          "detail": "5/29 of the scopes Composio's managed app requests appear in the guide (the guide lists the scopes a minimal integration needs, not every scope a full one may ask for). Not in the guide: account-info.security.read, accounting, cms.domains.read, cms.domains.write…."
+        },
+        {
+          "id": "usability-1",
+          "group": "usability",
+          "label": "Step detail",
+          "status": "pass",
+          "detail": "Every step has concrete instructions."
+        },
+        {
+          "id": "usability-2",
+          "group": "usability",
+          "label": "Exports render",
+          "status": "pass",
+          "detail": "Markdown 17.6k chars, JSON 32.0k chars."
+        }
+      ],
+      "summary": {
+        "pass": 29,
+        "warn": 2,
+        "fail": 0,
+        "skip": 0
+      },
+      "applied": []
+    }
   }
 }

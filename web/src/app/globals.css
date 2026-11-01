@@ -28,3 +28,21 @@ body {
   header, .no-print { display: none !important; }
   body { background: white; }
 }
+
+/* verification UI */
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+.shimmer {
+  background: linear-gradient(100deg, transparent 20%, rgba(99, 102, 241, 0.12) 50%, transparent 80%);
+  animation: shimmer 1.8s ease-in-out infinite;
+}
+@keyframes rise {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: none; }
+}
+.rise { animation: rise 0.35s ease-out both; }
+@media (prefers-reduced-motion: reduce) {
+  .shimmer, .rise { animation: none; }
+}

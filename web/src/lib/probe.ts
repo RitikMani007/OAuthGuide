@@ -49,15 +49,22 @@ export async function checkPublicHttps(rawUrl: string): Promise<{ url?: URL; err
   return { url };
 }
 
-export async function httpProbe(rawUrl: string): Promise<ProbeResult> {
+export type ProbeOptions = { method?: "GET" | "POST"; body?: string };
+
+export async function httpProbe(rawUrl: string, opts: ProbeOptions = {}): Promise<ProbeResult> {
   const { url, error } = await checkPublicHttps(rawUrl);
   if (!url) return { url: rawUrl, error };
   try {
     const res = await fetch(url, {
-      method: "GET",
+      method: opts.method ?? "GET",
+      body: opts.method === "POST" ? (opts.body ?? "") : undefined,
       redirect: "manual",
       signal: AbortSignal.timeout(8000),
-      headers: { "user-agent": "oauth-guide-agent/1.0 (+research probe)", accept: "application/json, text/html;q=0.8" },
+      headers: {
+        "user-agent": "oauth-guide-agent/1.0 (+research probe)",
+        accept: "application/json, text/html;q=0.8",
+        ...(opts.method === "POST" ? { "content-type": "application/x-www-form-urlencoded" } : {}),
+      },
     });
     const text = await res.text();
     return {

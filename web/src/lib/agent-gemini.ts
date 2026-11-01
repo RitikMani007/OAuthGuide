@@ -184,7 +184,6 @@ ${dossier}
   };
   await saveGenerated(guide);
   yield { type: "guide", slug: guide.slug };
-  yield { type: "phase", phase: "done", message: "Done." };
 }
 
 function dedupe(rs: SearchResult[]): SearchResult[] {

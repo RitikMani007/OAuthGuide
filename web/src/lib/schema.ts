@@ -127,7 +127,31 @@ export type StoredGuide = Guide & {
     verification?: {
       date: string;
       method: string;
-      findings: { claim: string; result: "confirmed" | "corrected" | "unverified"; note: string }[];
+      /** "independent": a separate agent re-checked a curated draft; "automated": the post-generation verifier. Missing = independent. */
+      kind?: "independent" | "automated";
+      model?: string;
+      findings: { claim: string; result: "confirmed" | "corrected" | "unverified"; note: string; quote?: string }[];
     };
+    /** deterministic post-generation checks (links, endpoints, consistency, catalog, usability) */
+    checks?: AutoChecks;
   };
+};
+
+export type CheckGroup = "links" | "endpoints" | "consistency" | "catalog" | "usability" | "claims";
+export type CheckStatus = "pass" | "warn" | "fail" | "skip";
+export type CheckResult = {
+  id: string;
+  group: CheckGroup;
+  label: string;
+  status: CheckStatus;
+  detail: string;
+  url?: string;
+};
+export type AutoChecks = {
+  date: string;
+  duration_ms: number;
+  results: CheckResult[];
+  summary: Record<CheckStatus, number>;
+  /** edits the verifier applied to the guide, in plain words */
+  applied: string[];
 };

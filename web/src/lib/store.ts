@@ -59,6 +59,19 @@ export async function saveGenerated(guide: StoredGuide): Promise<void> {
   await fs.writeFile(path.join(LOCAL_DIR, `${guide.slug}.json`), body);
 }
 
+/** Persist a verified guide. Generated guides go back to their store; curated guides are
+ *  written back to the repo JSON only in development (they ship with the build). */
+export async function saveChecked(guide: StoredGuide): Promise<"generated" | "curated" | "skipped"> {
+  if (guide.meta.origin === "generated") {
+    await saveGenerated(guide);
+    return "generated";
+  }
+  if (process.env.NODE_ENV === "production" || useBlob) return "skipped";
+  const file = path.join(process.cwd(), "src/data/guides", `${guide.slug}.json`);
+  await fs.writeFile(file, JSON.stringify(guide, null, 2) + "\n");
+  return "curated";
+}
+
 export type GuideStats = {
   /** evidence labels across verdict, steps, blockers and review */
   tested: number;
@@ -73,6 +86,9 @@ export type GuideStats = {
   probes: number;
   uncertain: number;
   verified: boolean;
+  verification_kind: "independent" | "automated" | null;
+  verification: { confirmed: number; corrected: number; unverified: number } | null;
+  checks: { pass: number; warn: number; fail: number; skip: number; date: string } | null;
 };
 
 export type GuideSummary = Pick<StoredGuide, "slug" | "name" | "category" | "summary" | "verdict"> & {
@@ -80,6 +96,7 @@ export type GuideSummary = Pick<StoredGuide, "slug" | "name" | "category" | "sum
   generated_at: string;
   logo: string | null;
   stats: GuideStats;
+  corrections: { claim: string; note: string }[];
 };
 
 export function guideStats(g: StoredGuide): GuideStats {
@@ -98,6 +115,15 @@ export function guideStats(g: StoredGuide): GuideStats {
     probes: g.sources.filter((s) => s.kind === "tested").length,
     uncertain: g.uncertain.length,
     verified: !!g.meta.verification,
+    verification_kind: g.meta.verification ? (g.meta.verification.kind ?? "independent") : null,
+    verification: g.meta.verification
+      ? {
+          confirmed: g.meta.verification.findings.filter((f) => f.result === "confirmed").length,
+          corrected: g.meta.verification.findings.filter((f) => f.result === "corrected").length,
+          unverified: g.meta.verification.findings.filter((f) => f.result === "unverified").length,
+        }
+      : null,
+    checks: g.meta.checks ? { ...g.meta.checks.summary, date: g.meta.checks.date } : null,
   };
 }
 
@@ -111,6 +137,7 @@ const summarize = (g: StoredGuide): GuideSummary => ({
   generated_at: g.meta.generated_at,
   logo: g.meta.logo ?? resolveLogo({ name: g.name, website: g.website }),
   stats: guideStats(g),
+  corrections: (g.meta.verification?.findings ?? []).filter((f) => f.result === "corrected").map(({ claim, note }) => ({ claim, note })),
 });
 
 export async function listGenerated(): Promise<GuideSummary[]> {
