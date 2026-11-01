@@ -49,8 +49,8 @@ export async function POST(req: Request) {
           const guide = await getGuide(slug);
           if (!guide) throw new Error("Guide vanished before verification.");
           send({ type: "phase", phase: "verify", message: `Verifying the ${guide.name} guide: re-fetching sources, probing endpoints, checking claims…` });
-          // Curated guides already carry an independent human-reviewed verification; only run the deterministic checks on them.
-          const claims = guide.meta.origin === "generated";
+          // A guide that already carries an independent (agent-reviewed) verification keeps it; every other guide gets the model re-check.
+          const claims = !guide.meta.verification || guide.meta.verification.kind === "automated";
           const it = verifyGuide(guide, { claims, signal: req.signal });
           let next = await it.next();
           while (!next.done) {

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { listCurated, listGenerated } from "@/lib/store";
 import { DIRECTORY, DIRECTORY_META, normKey } from "@/lib/directory";
-import { EvidenceBadge, OwnerBadge } from "@/components/badges";
+import { EvidenceBadge, OwnerBadge, TrustBadge } from "@/components/badges";
 import { AppLogo } from "@/components/app-logo";
 
 export const metadata = { title: "Method & evidence · OAuth Runway" };
@@ -27,8 +27,9 @@ export default async function MethodPage() {
 
   const rows = library
     .filter((g) => g.stats.verification)
-    .map((g) => ({ slug: g.slug, name: g.name, kind: g.stats.verification_kind, ...g.stats.verification!, corrections: g.corrections }));
+    .map((g) => ({ slug: g.slug, name: g.name, kind: g.stats.verification_kind, ...g.stats.verification!, findings: g.findings }));
   const tot = rows.reduce((a, r) => ({ c: a.c + r.confirmed, x: a.x + r.corrected, u: a.u + r.unverified }), { c: 0, x: 0, u: 0 });
+  const byTrust = { verified: library.filter((g) => g.stats.trust.level === "verified").length, checked: library.filter((g) => g.stats.trust.level === "checked").length, unchecked: library.filter((g) => g.stats.trust.level === "unchecked").length };
 
   return (
     <div className="space-y-10 max-w-3xl">
@@ -72,7 +73,7 @@ export default async function MethodPage() {
           <li><b>Independent verification</b> (curated guides). A separate agent that didn&apos;t write the draft re-checks the highest-impact claims per guide against primary sources and the probe log. It corrects errors in place and logs every check. Live-generated guides get the automated version of this (step 5).</li>
         </ol>
         <p className="text-sm text-stone-600">
-          Live guides generated from the search box go through steps 1–5 and are marked &ldquo;agent-generated, not hand-reviewed&rdquo;.
+          Every guide, curated or generated, gets the same status from the same four rules: the automated checks ran, none failed, a second pass re-checked the key claims, and more claims were confirmed than left unverified. All four met is <b>Verified</b>; checks ran but a rule is unmet is <b>Checked</b>; otherwise <b>Unchecked</b>. A verified generated guide can be promoted into the curated set with <code className="text-xs bg-stone-100 px-1 rounded">npm run promote -- &lt;slug&gt;</code>, which applies the same rules and records the promotion on the guide.
           The agent&apos;s full research notes (every page excerpt and probe response) are attached to each generated guide so
           anyone can audit it. The live demo runs on Gemini&apos;s free tier. The same pipeline can run on Claude, with built-in
           web search, by setting <code className="text-xs bg-stone-100 px-1 rounded">ANTHROPIC_API_KEY</code>.
@@ -158,7 +159,8 @@ export default async function MethodPage() {
                     </Link>
                   </td>
                   <td className="p-2.5 whitespace-nowrap text-xs">
-                    {g.origin === "curated" ? <span className="text-emerald-700">curated{g.stats.verification_kind === "independent" ? " · verified" : ""}</span> : <span className="text-indigo-700">✦ generated{g.stats.checks ? " · auto-checked" : " · unchecked"}</span>}
+                    <TrustBadge level={g.stats.trust.level} />
+                    <span className="ml-1.5 text-stone-500">{g.origin === "curated" ? "curated" : "generated"}</span>
                   </td>
                   <td className="p-2.5 whitespace-nowrap">{g.verdict.label} · {g.verdict.calendar}</td>
                   <td className="p-2.5 whitespace-nowrap tabular-nums">{g.stats.agent} · {g.stats.you} · {g.stats.wait} <span className="text-stone-400">/ {g.stats.steps}</span></td>
@@ -176,26 +178,42 @@ export default async function MethodPage() {
           </table>
         </div>
         <p className="text-xs text-stone-500">
-          Checks = automated pass / warn / fail. Claims = confirmed / corrected / unverified by an independent re-check. Open = questions the guide leaves unverified.
+          Status = the same rules for every guide ({byTrust.verified} verified · {byTrust.checked} checked · {byTrust.unchecked} unchecked). Checks = automated pass / warn / fail. Claims = confirmed / corrected / unverified by a second pass. Open = questions the guide leaves unverified.
         </p>
-        {rows.some((r) => r.corrections.length) && (
-          <div className="space-y-2">
-            <div className="text-sm font-medium">What verification corrected</div>
-            {rows.filter((r) => r.corrections.length).map((r) => (
-              <details key={r.slug} className="rounded-lg border border-amber-200 bg-amber-50/60 p-3 text-sm">
-                <summary className="cursor-pointer font-medium">
-                  <Link href={`/guides/${r.slug}`} className="hover:underline">{r.name}</Link>: {r.corrections.length} correction{r.corrections.length === 1 ? "" : "s"}
-                  <span className="ml-2 text-xs font-normal text-stone-500">{r.kind === "automated" ? "automated re-check" : "independent agent"}</span>
+        <div className="space-y-2">
+          <div className="text-sm font-medium">What the claim re-check found, guide by guide</div>
+          <p className="text-xs text-stone-500">Every guide that has been through a second pass is listed, whether or not anything needed correcting. Corrections were applied to the guide in place.</p>
+          {library.map((g) => {
+            const r = rows.find((x) => x.slug === g.slug);
+            const corrected = r?.findings.filter((f) => f.result === "corrected") ?? [];
+            const tone = !r ? "border-stone-200 bg-stone-50" : corrected.length ? "border-amber-200 bg-amber-50/60" : "border-emerald-200 bg-emerald-50/40";
+            return (
+              <details key={g.slug} className={`rounded-lg border p-3 text-sm ${tone}`}>
+                <summary className="cursor-pointer">
+                  <span className="font-medium"><Link href={`/guides/${g.slug}`} className="hover:underline">{g.name}</Link></span>
+                  {r ? (
+                    <>
+                      : <span className="text-emerald-700">{r.confirmed} confirmed</span>, <span className="text-amber-700">{r.corrected} corrected</span>, <span className="text-stone-600">{r.unverified} unverified</span>
+                      <span className="ml-2 text-xs text-stone-500">{r.kind === "automated" ? "automated re-check" : "independent agent"}</span>
+                    </>
+                  ) : (
+                    <span className="text-stone-500">: not re-checked yet · <Link href={`/generate?verify=${g.slug}`} className="text-indigo-700 underline">run it</Link></span>
+                  )}
                 </summary>
-                <ul className="mt-2 space-y-2">
-                  {r.corrections.map((c, i) => (
-                    <li key={i}><span className="font-medium">{c.claim}</span><div className="text-stone-700 mt-0.5">{c.note}</div></li>
-                  ))}
-                </ul>
+                {r && (
+                  <ul className="mt-2 space-y-1.5">
+                    {r.findings.map((f, i) => (
+                      <li key={i} className="flex gap-2">
+                        <span className={`shrink-0 rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase h-fit ${f.result === "confirmed" ? "bg-emerald-100 text-emerald-800" : f.result === "corrected" ? "bg-amber-100 text-amber-800" : "bg-stone-200 text-stone-700"}`}>{f.result}</span>
+                        <span><span className="font-medium">{f.claim}</span><span className="block text-xs text-stone-700">{f.note}</span></span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </details>
-            ))}
-          </div>
-        )}
+            );
+          })}
+        </div>
       </section>
 
       <section className="space-y-3">

@@ -67,3 +67,22 @@ export const APPROVAL_LABEL: Record<Guide["verdict"]["approval"], string> = {
   always: "Review always required",
   "partner-contract": "Partner program / contract",
 };
+
+import { TRUST_BLURB, TRUST_LABEL, type TrustLevel } from "@/lib/trust";
+
+const TRUST: Record<TrustLevel, { cls: string; icon: string }> = {
+  verified: { cls: "bg-emerald-100 text-emerald-800 ring-emerald-200", icon: "✓" },
+  checked: { cls: "bg-amber-100 text-amber-800 ring-amber-200", icon: "!" },
+  unchecked: { cls: "bg-stone-100 text-stone-600 ring-stone-200", icon: "–" },
+};
+
+/** The same badge for every guide: verified, checked or unchecked, by the rules in lib/trust.ts. */
+export function TrustBadge({ level, size = "sm" }: { level: TrustLevel; size?: "sm" | "md" }) {
+  const s = TRUST[level];
+  return (
+    <span title={TRUST_BLURB[level]} className={`inline-flex items-center gap-1 rounded-full ring-1 font-medium ${s.cls} ${size === "md" ? "px-2.5 py-0.5 text-xs" : "px-2 py-0.5 text-[11px]"}`}>
+      <span aria-hidden>{s.icon}</span>
+      {TRUST_LABEL[level]}
+    </span>
+  );
+}

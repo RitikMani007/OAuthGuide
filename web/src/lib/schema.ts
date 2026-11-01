@@ -134,6 +134,8 @@ export type StoredGuide = Guide & {
     };
     /** deterministic post-generation checks (links, endpoints, consistency, catalog, usability) */
     checks?: AutoChecks;
+    /** set when a generated guide was promoted into the curated set by scripts/promote-guide.ts */
+    promoted?: { date: string; from: string; forced?: boolean };
   };
 };
 

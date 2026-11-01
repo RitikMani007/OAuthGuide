@@ -3,7 +3,8 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { getGuide } from "@/lib/store";
 import { md } from "@/lib/md";
-import { DifficultyDots, EvidenceBadge, OwnerBadge, APPROVAL_LABEL } from "@/components/badges";
+import { DifficultyDots, EvidenceBadge, OwnerBadge, TrustBadge, APPROVAL_LABEL } from "@/components/badges";
+import { guideTrust } from "@/lib/trust";
 import { StepChecklist } from "@/components/step-checklist";
 import { ShareBar } from "@/components/share-bar";
 import { AppLogo } from "@/components/app-logo";
@@ -39,6 +40,7 @@ export default async function GuidePage({ params }: Props) {
   const srcById = new Map(g.sources.map((s) => [s.id, s]));
   const counts = countEvidence(g);
   const agentSteps = g.steps.filter((s) => s.owner === "agent").length;
+  const trust = guideTrust(g);
 
   return (
     <article className="space-y-10 prose-guide-root">
@@ -48,19 +50,12 @@ export default async function GuidePage({ params }: Props) {
           <Link href="/" className="hover:text-stone-800">Library</Link>
           <span>/</span>
           <span>{g.category}</span>
-          <span className="ml-auto">
-            {g.meta.origin === "generated" ? (
-              <span className="text-indigo-700">
-                ✦ Agent-generated {fmtDate(g.meta.generated_at)} ·{" "}
-                {g.meta.checks ? (
-                  <>auto-checked: {g.meta.checks.summary.pass} pass, {g.meta.checks.summary.warn} warn, {g.meta.checks.summary.fail} fail{g.meta.verification?.kind === "automated" ? `, ${g.meta.verification.findings.length} claims re-checked` : ""} · not hand-reviewed</>
-                ) : (
-                  <>not yet checked</>
-                )}
-              </span>
-            ) : (
-              <span className="text-emerald-700">Curated · researched by agents, spot-checked {g.meta.verification ? fmtDate(g.meta.verification.date) : fmtDate(g.meta.generated_at)}</span>
-            )}
+          <span className="ml-auto inline-flex items-center gap-2">
+            <TrustBadge level={trust.level} />
+            <span>
+              {g.meta.origin === "curated" ? (g.meta.promoted ? `promoted to the curated set ${fmtDate(g.meta.promoted.date)}` : "curated") : "✦ agent-generated"} {fmtDate(g.meta.generated_at)}
+              {trust.date ? ` · last checked ${fmtDate(trust.date)}` : ""}
+            </span>
           </span>
         </div>
         <div className="flex items-center gap-4">
@@ -221,6 +216,7 @@ export default async function GuidePage({ params }: Props) {
       {/* Evidence */}
       <Section title="How much to trust this guide" kicker={`${counts.tested} tested · ${counts.sourced} sourced · ${counts.inferred} inferred claims`}>
         <EvidenceBar counts={counts} />
+        <TrustPanel trust={trust} guide={g} />
         {g.meta.checks && <ChecksPanel checks={g.meta.checks} slug={g.slug} />}
         {!g.meta.checks && (
           <div className="mt-4 no-print text-sm text-stone-600">
@@ -354,6 +350,44 @@ function TierPill({ tier }: { tier: string }) {
 
 function fmtDate(iso: string) {
   return new Date(iso).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
+}
+
+function TrustPanel({ trust, guide: g }: { trust: ReturnType<typeof guideTrust>; guide: StoredGuide }) {
+  const tone = trust.level === "verified" ? "border-emerald-200 bg-emerald-50/50" : trust.level === "checked" ? "border-amber-200 bg-amber-50/50" : "border-stone-200 bg-stone-50";
+  return (
+    <div className={`mt-4 rounded-xl border p-4 ${tone}`}>
+      <div className="flex flex-wrap items-center gap-2">
+        <TrustBadge level={trust.level} size="md" />
+        <span className="text-sm font-medium">
+          {trust.level === "verified" ? "This guide meets every trust rule." : trust.level === "checked" ? "This guide does not meet every trust rule yet." : "This guide has not been checked yet."}
+        </span>
+        <span className="ml-auto text-xs text-stone-500">The same four rules apply to every guide, curated or generated.</span>
+      </div>
+      <ul className="mt-3 grid sm:grid-cols-2 gap-x-4 gap-y-1.5 text-sm">
+        {trust.rules.map((r) => (
+          <li key={r.id} className="flex gap-2">
+            <span className={`mt-0.5 inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full text-[10px] font-bold ${r.ok ? "bg-emerald-100 text-emerald-800" : "bg-stone-200 text-stone-600"}`}>{r.ok ? "✓" : "–"}</span>
+            <span className="min-w-0">
+              <span className="font-medium">{r.label}</span>
+              <span className="block text-xs text-stone-600">{r.detail}</span>
+            </span>
+          </li>
+        ))}
+      </ul>
+      <div className="mt-3 no-print text-xs text-stone-600">
+        {trust.level !== "verified" && (
+          <>
+            <Link href={`/generate?verify=${g.slug}`} className="text-indigo-700 underline">Run the checks</Link>
+            {trust.level === "checked" && <> to try again after the sources or the guide change.</>}
+          </>
+        )}
+        {trust.level === "verified" && g.meta.origin === "generated" && (
+          <>Eligible for the curated set that ships with the site: <code className="rounded bg-white/70 px-1">npm run promote -- {g.slug}</code> copies it into the repo under the same rules.</>
+        )}
+        {trust.level === "verified" && g.meta.origin === "curated" && <>Ships with the site. <Link href={`/generate?verify=${g.slug}`} className="text-indigo-700 underline">Re-run the checks</Link> any time.</>}
+      </div>
+    </div>
+  );
 }
 
 const GROUP_TITLE: Record<string, string> = {

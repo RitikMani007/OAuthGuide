@@ -5,6 +5,7 @@ import { put, list } from "@vercel/blob";
 import { curated } from "@/data/guides";
 import { resolveLogo } from "./directory";
 import type { StoredGuide } from "./schema";
+import { guideTrust, type Trust } from "./trust";
 
 // Curated guides ship with the repo. Generated guides go to Vercel Blob in
 // production (BLOB_READ_WRITE_TOKEN set) and to ./.data locally.
@@ -89,6 +90,8 @@ export type GuideStats = {
   verification_kind: "independent" | "automated" | null;
   verification: { confirmed: number; corrected: number; unverified: number } | null;
   checks: { pass: number; warn: number; fail: number; skip: number; date: string } | null;
+  /** the same trust rules for every guide */
+  trust: Trust;
 };
 
 export type GuideSummary = Pick<StoredGuide, "slug" | "name" | "category" | "summary" | "verdict"> & {
@@ -96,7 +99,7 @@ export type GuideSummary = Pick<StoredGuide, "slug" | "name" | "category" | "sum
   generated_at: string;
   logo: string | null;
   stats: GuideStats;
-  corrections: { claim: string; note: string }[];
+  findings: { claim: string; result: "confirmed" | "corrected" | "unverified"; note: string }[];
 };
 
 export function guideStats(g: StoredGuide): GuideStats {
@@ -124,6 +127,7 @@ export function guideStats(g: StoredGuide): GuideStats {
         }
       : null,
     checks: g.meta.checks ? { ...g.meta.checks.summary, date: g.meta.checks.date } : null,
+    trust: guideTrust(g),
   };
 }
 
@@ -137,7 +141,7 @@ const summarize = (g: StoredGuide): GuideSummary => ({
   generated_at: g.meta.generated_at,
   logo: g.meta.logo ?? resolveLogo({ name: g.name, website: g.website }),
   stats: guideStats(g),
-  corrections: (g.meta.verification?.findings ?? []).filter((f) => f.result === "corrected").map(({ claim, note }) => ({ claim, note })),
+  findings: (g.meta.verification?.findings ?? []).map(({ claim, result, note }) => ({ claim, result, note })),
 });
 
 export async function listGenerated(): Promise<GuideSummary[]> {

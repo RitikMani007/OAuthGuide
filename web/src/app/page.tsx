@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { listCurated, listGenerated } from "@/lib/store";
 import { DIRECTORY, DIRECTORY_META, normKey } from "@/lib/directory";
-import { DifficultyPill, APPROVAL_LABEL } from "@/components/badges";
+import { DifficultyPill, TrustBadge, APPROVAL_LABEL } from "@/components/badges";
 import { SearchBox, type SearchItem } from "@/components/search-box";
 import { AppLogo } from "@/components/app-logo";
 import { DirectoryBrowser, type DirectoryItem } from "@/components/directory-browser";
@@ -88,6 +88,7 @@ export default async function Home() {
                 <span>⏱ {g.verdict.hands_on} hands-on</span>
                 <span>📅 {g.verdict.calendar} to production</span>
                 <span>{APPROVAL_LABEL[g.verdict.approval]}</span>
+                <TrustBadge level={g.stats.trust.level} />
                 {g.origin === "generated" && <span className="text-indigo-600">✦ agent-generated</span>}
                 {!inDirectory.has(g.slug) && <span className="text-stone-400">not in Composio&apos;s catalog</span>}
               </div>
