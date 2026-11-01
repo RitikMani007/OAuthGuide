@@ -44,6 +44,7 @@ So the product focuses on **predicting that climb and splitting the work.** Ever
   4. **Write.** A schema-constrained call produces the guide. Code then enforces the evidence rules: "tested" requires a probe citation, and "sourced" requires a resolvable source.
 
   Each model call walks a fallback chain of models with timeouts. A typical run takes 30–90 seconds, and progress streams to the browser over SSE: pages read, probes, and the agent's notes. The full research notes (page excerpts and probe responses) are stored with each guide so anyone can audit it. Setting `ANTHROPIC_API_KEY` switches to a Claude agent (`web/src/lib/agent.ts`) that uses built-in web search and fetch in a real tool loop.
+- **The method page is computed, not written.** `/method` reads the live library on every request: guide counts, directory coverage, the evidence mix across every verdict, step, blocker and review section, the agent/you/wait split, and the verification table for each curated guide that carries a verification record. Adding a curated guide to `web/src/data/guides/` or generating one live updates the page with no edits.
 - **Independent verification for the curated library.** Research agents drafted 8 guides. Separate agents that didn't write the drafts then re-checked 64 high-impact claims and corrected 9. Every correction is published per guide and on `/method`.
 - **Variety over volume.** The 8 curated providers cover the whole range: GitHub and Notion (Easy), HubSpot, QuickBooks and Outlook (Moderate, each for a different reason), Gmail and Slack (Hard), and LinkedIn (Gated).
 - **The library is the whole managed OAuth catalog.** The home page lists every OAuth-capable toolkit in Composio's [managed OAuth app directory](https://docs.composio.dev/toolkits/managed-auth): 387 apps, 125 of them with a Composio-managed OAuth app. The directory is built by `web/scripts/fetch-directory.mjs` from the same data file the docs page loads (`web/src/data/directory.json`, dated). Each app shows its logo and whether Composio manages an OAuth app for it. Apps with a guide open it; any other app starts the live agent. The directory also feeds the agent: when a requested app is in the catalog, the agent gets its canonical name, description, managed status, and the scopes Composio's own app requests, which is a strong hint of what an agent integration needs.
@@ -72,6 +73,8 @@ npm run dev                     # http://localhost:3000
 npm run validate-guides         # check the curated JSON against the schema
 node scripts/fetch-directory.mjs  # refresh the app directory from Composio's catalog
 ```
+
+**Deploying.** Every push to `main` runs `.github/workflows/deploy.yml`: lint, type check and guide-schema validation, then a production deploy to Vercel with the Vercel CLI. The workflow needs one repository secret, `VERCEL_TOKEN`; the project and team IDs are in the workflow file. Without the secret the checks still run and the deploy step is skipped with a warning.
 
 Locally, generated guides are saved to `web/.data/`. On Vercel, connect a Blob store, which sets `BLOB_READ_WRITE_TOKEN`, so generated guides persist and can be shared. To add a curated guide, put its JSON in `web/src/data/guides/` and run `npm run index-guides`. The build also runs it.
 

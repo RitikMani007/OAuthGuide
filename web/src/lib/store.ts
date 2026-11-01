@@ -59,11 +59,47 @@ export async function saveGenerated(guide: StoredGuide): Promise<void> {
   await fs.writeFile(path.join(LOCAL_DIR, `${guide.slug}.json`), body);
 }
 
+export type GuideStats = {
+  /** evidence labels across verdict, steps, blockers and review */
+  tested: number;
+  sourced: number;
+  inferred: number;
+  /** step ownership */
+  agent: number;
+  you: number;
+  wait: number;
+  steps: number;
+  sources: number;
+  probes: number;
+  uncertain: number;
+  verified: boolean;
+};
+
 export type GuideSummary = Pick<StoredGuide, "slug" | "name" | "category" | "summary" | "verdict"> & {
   origin: StoredGuide["meta"]["origin"];
   generated_at: string;
   logo: string | null;
+  stats: GuideStats;
 };
+
+export function guideStats(g: StoredGuide): GuideStats {
+  const labels = [g.verdict.evidence, g.review.evidence, ...g.steps.map((s) => s.evidence), ...g.blockers.map((b) => b.evidence)];
+  const count = <T extends string>(xs: T[], v: T) => xs.filter((x) => x === v).length;
+  const owners = g.steps.map((s) => s.owner);
+  return {
+    tested: count(labels, "tested"),
+    sourced: count(labels, "sourced"),
+    inferred: count(labels, "inferred"),
+    agent: count(owners, "agent"),
+    you: count(owners, "you"),
+    wait: count(owners, "wait"),
+    steps: g.steps.length,
+    sources: g.sources.length,
+    probes: g.sources.filter((s) => s.kind === "tested").length,
+    uncertain: g.uncertain.length,
+    verified: !!g.meta.verification,
+  };
+}
 
 const summarize = (g: StoredGuide): GuideSummary => ({
   slug: g.slug,
@@ -74,6 +110,7 @@ const summarize = (g: StoredGuide): GuideSummary => ({
   origin: g.meta.origin,
   generated_at: g.meta.generated_at,
   logo: g.meta.logo ?? resolveLogo({ name: g.name, website: g.website }),
+  stats: guideStats(g),
 });
 
 export async function listGenerated(): Promise<GuideSummary[]> {
