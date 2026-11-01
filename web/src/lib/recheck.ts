@@ -71,11 +71,21 @@ export async function* recheckClaims(g: StoredGuide, ctx: RecheckContext): Async
   const pages: Page[] = [];
   let located = 0;
   const readable = (p: Page) => !p.error || p.text.length > 400;
+  // A single-page app returns navigation chrome that passes as "readable" but says nothing
+  // about the claims. Such pages go to the URL reader as well.
+  const thin = (p: Page) => {
+    if (!readable(p) || p.text.length < 1500) return true;
+    const matched = claims.filter((c) => c.re.test(p.text)).length;
+    if (matched <= 1 && p.text.length < 12_000) return true;
+    // A 600 KB document with 1% text is an app shell, whatever words the menu contains.
+    return !!p.html_chars && p.html_chars > 150_000 && p.text.length / p.html_chars < 0.03;
+  };
+  const exists = (p: Page) => !/HTTP 404|HTTP 410|DNS|not https|private/.test(p.error ?? "");
   const first = await mapLimit(cited, 6, (s) => readPage(s.url, 60_000));
-  pages.push(...first.filter(readable));
-  const jsOnly = first.filter((p) => !readable(p) && !/HTTP 404|HTTP 410|DNS|not https|private/.test(p.error ?? "")).map((p) => p.url).slice(0, 6);
+  pages.push(...first.filter((p) => readable(p) && !thin(p)));
+  const jsOnly = first.filter((p) => thin(p) && exists(p)).map((p) => p.url).slice(0, 6);
   if (jsOnly.length && elapsed() < 60) {
-    yield { type: "note", text: `${jsOnly.length} page${jsOnly.length > 1 ? "s" : ""} need JavaScript; using the URL reader. ` };
+    yield { type: "note", text: `${jsOnly.length} cited page${jsOnly.length > 1 ? "s" : ""} came back without usable text (JavaScript-rendered); using the URL reader. ` };
     try {
       const { extracts } = await geminiReadUrls(jsOnly, `${g.name} OAuth app registration: app review or approval requirements and timelines, PKCE, token and refresh-token lifetimes, user or install limits before approval, restricted scopes, redirect URI rules`, ctx.signal);
       pages.push(...extracts.map((e) => ({ url: e.url, title: `${e.url} (URL reader)`, text: e.text, links: [] })));
@@ -104,8 +114,19 @@ Pages already read: ${pages.map((p) => p.url).join(", ") || "none"}`,
       const host = docs.developer_docs_domain.replace(/^https?:\/\//, "").split("/")[0];
       const urls = [...new Set([...docs.doc_urls.filter((u) => /^https:\/\//.test(u)), ...(host ? [`https://${host}/`] : [])])].filter((u) => !readSet.has(u)).slice(0, 10);
       for (const u of urls) readSet.add(u);
-      const found = (await mapLimit(urls, 5, (u) => readPage(u, 60_000))).filter(readable).filter((p) => !pages.some((q) => q.url === p.url));
-      yield { type: "note", text: `Found ${found.length} of ${urls.length} expected developer-docs pages. ` };
+      const fetched = await mapLimit(urls, 5, (u) => readPage(u, 60_000));
+      const found = fetched.filter((p) => readable(p) && !thin(p)).filter((p) => !pages.some((q) => q.url === p.url));
+      // Developer portals are often single-page apps: a plain fetch returns a shell. Let the URL reader try those.
+      const js = fetched.filter((p) => thin(p) && exists(p)).map((p) => p.url).slice(0, 6);
+      if (js.length && elapsed() < 70) {
+        try {
+          const { extracts } = await geminiReadUrls(js, `${g.name} OAuth app registration: how to create an OAuth client, app review or approval requirements and timelines, PKCE, access and refresh token lifetimes, scopes and which need approval, marketplace publishing`, ctx.signal);
+          found.push(...extracts.map((e) => ({ url: e.url, title: `${e.url} (URL reader)`, text: e.text, links: [] })));
+        } catch {
+          /* best-effort */
+        }
+      }
+      yield { type: "note", text: `Found ${found.length} of ${urls.length} expected developer-docs pages${js.length ? ` (${js.length} needed the URL reader)` : ""}. ` };
       pages.push(...found);
       located = found.length;
     } catch {
@@ -276,24 +297,35 @@ Live probe results count as evidence for PKCE and token claims. Return every cla
 
 const STOP = new Set(["their", "there", "these", "those", "which", "while", "where", "would", "could", "should", "about", "after", "before", "other", "under", "every", "within", "without", "being", "through", "between", "because", "https", "apps", "application", "applications", "oauth", "developer", "developers", "account", "accounts", "requires", "required", "require"]);
 
-function excerptsFor(pages: Page[], c: Claim, perPage = 3, radius = 350): Excerpt[] {
-  const out: Excerpt[] = [];
+function excerptsFor(pages: Page[], c: Claim, perPage = 8, radius = 320): Excerpt[] {
+  // Rank passages by how many distinct claim keywords they contain, so a page that mentions
+  // "refresh" forty times still surfaces the one sentence about rotation.
+  const valueWords = (c.text.split(": ").slice(1).join(": ").toLowerCase().match(/[a-z][a-z0-9_-]{3,}/g) ?? []).filter((w) => !STOP.has(w));
+  const out: (Excerpt & { score: number })[] = [];
   for (const p of pages) {
-    const windows: [number, number][] = [];
     const re = new RegExp(c.re.source, "gi");
+    const windows: [number, number][] = [];
     let m: RegExpExecArray | null;
-    while ((m = re.exec(p.text)) && windows.length < perPage * 3) {
+    let hits = 0;
+    while ((m = re.exec(p.text)) && hits++ < 80) {
       const s = Math.max(0, m.index - radius);
       const e = Math.min(p.text.length, m.index + m[0].length + radius);
       const last = windows[windows.length - 1];
-      if (last && s <= last[1]) last[1] = e;
+      if (last && s <= last[1]) last[1] = Math.max(last[1], e);
       else windows.push([s, e]);
-      if (windows.length >= perPage) break;
     }
-    for (const [s, e] of windows) out.push({ url: p.url, title: p.title.slice(0, 80), text: p.text.slice(s, e).replace(/\s+/g, " ").trim() });
-    if (out.length > 24) break;
+    const scored = windows.map(([s, e]) => {
+      const text = p.text.slice(s, e).replace(/\s+/g, " ").trim();
+      const low = text.toLowerCase();
+      const kw = new Set((low.match(new RegExp(c.re.source, "gi")) ?? []).map((x) => x.toLowerCase())).size;
+      const vw = valueWords.filter((w) => low.includes(w)).length;
+      return { url: p.url, title: p.title.slice(0, 80), text, score: kw * 2 + vw };
+    });
+    scored.sort((x, y) => y.score - x.score);
+    out.push(...scored.slice(0, perPage));
   }
-  return out.slice(0, 24);
+  out.sort((x, y) => y.score - x.score);
+  return out.slice(0, 48).map(({ url, title, text }) => ({ url, title, text }));
 }
 
 function keyOf(label: string, claims: Claim[]): string | undefined {

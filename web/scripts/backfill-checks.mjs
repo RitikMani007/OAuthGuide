@@ -14,6 +14,7 @@ const base = (opt("--base", process.env.BASE_URL ?? "http://localhost:3000")).re
 const all = args.includes("--all");
 const dry = args.includes("--dry-run");
 const only = (opt("--only", "") ?? "").split(",").map((s) => s.trim()).filter(Boolean);
+const verbose = args.includes("--verbose");
 
 let passcode = process.env.DEMO_PASSCODE;
 if (!passcode) {
@@ -62,6 +63,7 @@ for (const g of todo) {
         failures++;
         console.log(`\n  ✗ ${e.message}`);
       } else if (e.type === "phase" && e.phase === "done") console.log(`  ${e.message}`);
+      else if (verbose && e.type === "note") console.log(`\n  · ${e.text.trim()}`);
     }
   }
 }

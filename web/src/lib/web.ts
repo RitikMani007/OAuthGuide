@@ -88,7 +88,7 @@ export async function webSearch(q: string, limit = 8): Promise<SearchResult[]> {
   return [];
 }
 
-export type Page = { url: string; title: string; text: string; links: { url: string; text: string }[]; error?: string };
+export type Page = { url: string; title: string; text: string; links: { url: string; text: string }[]; error?: string; /** size of the raw HTML, to spot single-page apps whose text is a shell */ html_chars?: number };
 
 /** Fetch a public https page and reduce it to readable text. */
 export async function readPage(rawUrl: string, maxChars = 9000): Promise<Page> {
@@ -113,7 +113,7 @@ export async function readPage(rawUrl: string, maxChars = 9000): Promise<Page> {
       const title = decode(body.match(/<title[^>]*>([\s\S]*?)<\/title>/i)?.[1] ?? "");
       const text = htmlToText(body).slice(0, maxChars);
       const links = extractLinks(body, url);
-      return { url: current, title, text, links, error: text.length < 200 ? "page had little readable text (may need JavaScript)" : undefined };
+      return { url: current, title, text, links, html_chars: body.length, error: text.length < 200 ? "page had little readable text (may need JavaScript)" : undefined };
     } catch (e) {
       return { url: current, title: "", text: "", links: [], error: e instanceof Error ? e.message : String(e) };
     }
