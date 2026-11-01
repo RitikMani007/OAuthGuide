@@ -546,6 +546,7 @@
           "note": "The LinkedIn Help page (l7) wasn't re-fetched in this pass. The Getting Access page only says products 'can be enabled after creating a new application'."
         }
       ]
-    }
+    },
+    "logo": "https://logos.composio.dev/api/linkedin"
   }
 }

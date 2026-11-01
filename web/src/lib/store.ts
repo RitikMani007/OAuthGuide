@@ -3,6 +3,7 @@ import { promises as fs } from "fs";
 import path from "path";
 import { put, list } from "@vercel/blob";
 import { curated } from "@/data/guides";
+import { resolveLogo } from "./directory";
 import type { StoredGuide } from "./schema";
 
 // Curated guides ship with the repo. Generated guides go to Vercel Blob in
@@ -61,6 +62,7 @@ export async function saveGenerated(guide: StoredGuide): Promise<void> {
 export type GuideSummary = Pick<StoredGuide, "slug" | "name" | "category" | "summary" | "verdict"> & {
   origin: StoredGuide["meta"]["origin"];
   generated_at: string;
+  logo: string | null;
 };
 
 const summarize = (g: StoredGuide): GuideSummary => ({
@@ -71,6 +73,7 @@ const summarize = (g: StoredGuide): GuideSummary => ({
   verdict: g.verdict,
   origin: g.meta.origin,
   generated_at: g.meta.generated_at,
+  logo: g.meta.logo ?? resolveLogo({ name: g.name, website: g.website }),
 });
 
 export async function listGenerated(): Promise<GuideSummary[]> {

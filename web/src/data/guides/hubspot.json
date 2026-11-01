@@ -504,6 +504,7 @@
           "note": "Quickstart guide. Live probe returned 200 with the oauth-ui page. Added tested source h13."
         }
       ]
-    }
+    },
+    "logo": "https://logos.composio.dev/api/hubspot"
   }
 }

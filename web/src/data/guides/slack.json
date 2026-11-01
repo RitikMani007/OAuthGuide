@@ -500,6 +500,7 @@
           "note": "Live probe confirmed the authorize URL serves Slack's install page (source t1). The token endpoint wasn't probed, and the docs weren't re-fetched for it in this pass."
         }
       ]
-    }
+    },
+    "logo": "https://logos.composio.dev/api/slack"
   }
 }

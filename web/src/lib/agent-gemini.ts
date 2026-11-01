@@ -1,7 +1,8 @@
 import "server-only";
 import { z, toJSONSchema } from "zod";
 import { Guide, type StoredGuide } from "./schema";
-import { composioManagedMatch } from "./composio";
+import { composioManagedMatch, directoryContext } from "./composio";
+import { resolveLogo } from "./directory";
 import { httpProbe, type ProbeResult } from "./probe";
 import { searchAll, readPage, type SearchResult, type Page } from "./web";
 import { gemini, geminiReadUrls, FAST_MODELS, WRITER_MODELS } from "./gemini";
@@ -51,7 +52,7 @@ export async function* generateGuideGemini(input: string, signal?: AbortSignal):
 
   // 1. Plan
   yield { type: "phase", phase: "research", message: `Planning research for "${input}"…` };
-  const planRes = await gemini({ models: [WRITER_MODELS[0], ...FAST_MODELS], system: PLAN_SYSTEM, prompt: `App or website: ${input}`, schema: schemaOf(Plan), timeoutMs: 40_000, signal });
+  const planRes = await gemini({ models: [WRITER_MODELS[0], ...FAST_MODELS], system: PLAN_SYSTEM, prompt: `App or website: ${input}\n${directoryContext(input)}`, schema: schemaOf(Plan), timeoutMs: 40_000, signal });
   const plan = Plan.parse(JSON.parse(planRes.text));
   yield { type: "note", text: `Identified ${plan.product} (developer docs: ${plan.developer_docs_domain}). ` };
 
@@ -144,6 +145,7 @@ Completeness: write 7–12 concrete steps covering prepare → register → conf
 Suggested slug: ${slugify(input)}
 Today: ${today}
 Composio managed OAuth app listed for this toolkit: ${managed ? `yes ("${managed}")` : "not found in the managed list (set composio_managed to false if the name clearly matches nothing, null if unsure)"}.
+${directoryContext(input)}
 
 <dossier>
 ${dossier}
@@ -178,7 +180,7 @@ ${dossier}
   const guide: StoredGuide = {
     ...enforceEvidence(reconciled),
     slug: slugify(parsed.data.slug || input),
-    meta: { origin: "generated", generated_at: new Date().toISOString(), model: `${writeRes.model} (plan/select: ${planRes.model})`, dossier },
+    meta: { origin: "generated", generated_at: new Date().toISOString(), model: `${writeRes.model} (plan/select: ${planRes.model})`, dossier, logo: resolveLogo({ name: parsed.data.name, website: parsed.data.website, query: input }) },
   };
   await saveGenerated(guide);
   yield { type: "guide", slug: guide.slug };

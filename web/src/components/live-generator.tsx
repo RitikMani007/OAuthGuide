@@ -3,6 +3,9 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import type { AgentEvent } from "@/lib/agent";
+import { AppLogo } from "./app-logo";
+
+export type AppHint = { name: string; logo: string | null; managed: boolean | null; inDirectory: boolean };
 
 type LogItem = { t: number; kind: string; text: string; sub?: string };
 
@@ -14,7 +17,7 @@ const PHASE_LABEL: Record<(typeof PHASES)[number], string> = {
   done: "Done",
 };
 
-export function LiveGenerator({ needsPasscode }: { needsPasscode: boolean }) {
+export function LiveGenerator({ needsPasscode, app }: { needsPasscode: boolean; app: AppHint | null }) {
   const params = useSearchParams();
   const router = useRouter();
   const q = params.get("q") ?? "";
@@ -37,9 +40,13 @@ export function LiveGenerator({ needsPasscode }: { needsPasscode: boolean }) {
 
   useEffect(() => {
     if (!started || !q || ran.current) return;
+    const ctrl = new AbortController();
+    // Start on the next tick. React Strict Mode (dev only) mounts, unmounts and remounts the
+    // component synchronously; the cleanup below cancels the timer, so only the final mount sends
+    // a request. Before this, the first request was aborted and shown as an error.
+    const timer = setTimeout(() => {
     ran.current = true;
     startRef.current = Date.now();
-    const ctrl = new AbortController();
     const add = (kind: string, text: string, sub?: string) =>
       setLog((l) => [...l, { t: Math.round((Date.now() - startRef.current) / 1000), kind, text, sub }]);
 
@@ -50,10 +57,10 @@ export function LiveGenerator({ needsPasscode }: { needsPasscode: boolean }) {
         body: JSON.stringify({ query: q, force, passcode: passcode || sessionStorage.getItem("passcode") || undefined }),
         signal: ctrl.signal,
       }).catch((e) => {
-        setError(String(e));
+        if (!ctrl.signal.aborted) setError(String(e)); // an abort is a teardown, not an error
         return null;
       });
-      if (!res) return;
+      if (!res || ctrl.signal.aborted) return;
       if (!res.ok || !res.body) {
         const j = await res.json().catch(() => ({}));
         setError(j.error ?? `Request failed (${res.status})`);
@@ -68,7 +75,14 @@ export function LiveGenerator({ needsPasscode }: { needsPasscode: boolean }) {
       const dec = new TextDecoder();
       let buf = "";
       for (;;) {
-        const { done, value } = await reader.read();
+        let chunk: ReadableStreamReadResult<Uint8Array>;
+        try {
+          chunk = await reader.read();
+        } catch (e) {
+          if (!ctrl.signal.aborted) setError(String(e));
+          break;
+        }
+        const { done, value } = chunk;
         if (done) break;
         buf += dec.decode(value, { stream: true });
         const parts = buf.split("\n\n");
@@ -112,7 +126,12 @@ export function LiveGenerator({ needsPasscode }: { needsPasscode: boolean }) {
         }
       }
     })();
-    return () => ctrl.abort();
+    }, 0);
+    return () => {
+      clearTimeout(timer);
+      ctrl.abort();
+      ran.current = false;
+    };
   }, [started, q, force, passcode, router]);
 
   if (!q) return <p>Nothing to investigate. Go back and enter an app.</p>;
@@ -127,7 +146,10 @@ export function LiveGenerator({ needsPasscode }: { needsPasscode: boolean }) {
           setStarted(true);
         }}
       >
-        <h1 className="text-xl font-semibold">Investigate &ldquo;{q}&rdquo;</h1>
+        <div className="flex items-center gap-3">
+          <AppLogo src={app?.logo} name={app?.name ?? q} size="lg" />
+          <h1 className="text-xl font-semibold">Investigate {app?.inDirectory ? app.name : <>&ldquo;{q}&rdquo;</>}</h1>
+        </div>
         <p className="text-sm text-stone-600">Live generation runs on a rate-limited model quota, so this demo needs a passcode (it&apos;s in the submission notes).</p>
         <input value={passcode} onChange={(e) => setPasscode(e.target.value)} type="password" placeholder="Passcode" className="w-full rounded-lg border border-stone-300 px-3 py-2" />
         {error && <p className="text-sm text-rose-700">{error}</p>}
@@ -141,7 +163,17 @@ export function LiveGenerator({ needsPasscode }: { needsPasscode: boolean }) {
     <div className="space-y-6">
       <div>
         <div className="text-xs uppercase tracking-wide text-indigo-600 font-medium">✦ Agent investigation · {elapsed}s</div>
-        <h1 className="text-2xl font-semibold mt-1">Building a guide for &ldquo;{q}&rdquo;</h1>
+        <div className="flex items-center gap-3 mt-1">
+          <AppLogo src={app?.logo} name={app?.name ?? q} size="lg" />
+          <div>
+            <h1 className="text-2xl font-semibold">Building a guide for {app?.inDirectory ? app.name : <>&ldquo;{q}&rdquo;</>}</h1>
+            {app?.inDirectory && (
+              <div className="text-xs text-stone-500">
+                In Composio&apos;s OAuth catalog · {app.managed ? "Composio-managed OAuth app available" : "bring your own OAuth app"}
+              </div>
+            )}
+          </div>
+        </div>
         <p className="text-sm text-stone-600 mt-1">
           The agent finds and reads the provider&apos;s developer docs, follows links to the relevant pages, and probes the
           provider&apos;s live OAuth endpoints. Then it writes a guide where each claim is labeled tested, sourced or inferred.

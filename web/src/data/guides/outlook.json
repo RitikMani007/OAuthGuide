@@ -518,6 +518,7 @@
           "note": "how-to-add-credentials page confirms the secret limits. The live probe confirmed the /common token endpoint in discovery and that the authorize URL serves the sign-in page (sources t1/t2 added)."
         }
       ]
-    }
+    },
+    "logo": "https://logos.composio.dev/api/outlook"
   }
 }

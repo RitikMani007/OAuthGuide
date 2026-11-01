@@ -2,7 +2,7 @@
 
 **How long until your users can connect this app?** OAuth Runway gives developers building AI agents setup and approval guides for provider OAuth apps. You can look up a provider in the library, or submit any app name or website and watch an agent investigate it and write a shareable guide in real time.
 
-- Live demo: _<Vercel URL>_. Live generation asks for a passcode, which is in the submission notes.
+- Live demo: _<Vercel URL>_. If a passcode is configured for live generation, it is in the submission notes.
 - Code: `web/` (Next.js 15 on Vercel). Live generation runs on Gemini's free tier, with Claude available as a drop-in provider.
 - Evidence: `verification/` (live probe logs and the drafts from before verification)
 
@@ -46,6 +46,8 @@ So the product focuses on **predicting that climb and splitting the work.** Ever
   Each model call walks a fallback chain of models with timeouts. A typical run takes 30–90 seconds, and progress streams to the browser over SSE: pages read, probes, and the agent's notes. The full research notes (page excerpts and probe responses) are stored with each guide so anyone can audit it. Setting `ANTHROPIC_API_KEY` switches to a Claude agent (`web/src/lib/agent.ts`) that uses built-in web search and fetch in a real tool loop.
 - **Independent verification for the curated library.** Research agents drafted 8 guides. Separate agents that didn't write the drafts then re-checked 64 high-impact claims and corrected 9. Every correction is published per guide and on `/method`.
 - **Variety over volume.** The 8 curated providers cover the whole range: GitHub and Notion (Easy), HubSpot, QuickBooks and Outlook (Moderate, each for a different reason), Gmail and Slack (Hard), and LinkedIn (Gated).
+- **The library is the whole managed OAuth catalog.** The home page lists every OAuth-capable toolkit in Composio's [managed OAuth app directory](https://docs.composio.dev/toolkits/managed-auth): 387 apps, 125 of them with a Composio-managed OAuth app. The directory is built by `web/scripts/fetch-directory.mjs` from the same data file the docs page loads (`web/src/data/directory.json`, dated). Each app shows its logo and whether Composio manages an OAuth app for it. Apps with a guide open it; any other app starts the live agent. The directory also feeds the agent: when a requested app is in the catalog, the agent gets its canonical name, description, managed status, and the scopes Composio's own app requests, which is a strong hint of what an agent integration needs.
+- **Logos.** Guides and the directory use the catalog's logo for listed apps. For apps outside the catalog, the generated guide falls back to the site's favicon. Logos are served from the catalog's CDN with a letter fallback if one fails to load.
 
 ## What was tested, sourced, and left uncertain
 
@@ -68,6 +70,7 @@ cp .env.example .env.local      # add GEMINI_API_KEY (free at aistudio.google.co
 npm install
 npm run dev                     # http://localhost:3000
 npm run validate-guides         # check the curated JSON against the schema
+node scripts/fetch-directory.mjs  # refresh the app directory from Composio's catalog
 ```
 
 Locally, generated guides are saved to `web/.data/`. On Vercel, connect a Blob store, which sets `BLOB_READ_WRITE_TOKEN`, so generated guides persist and can be shared. To add a curated guide, put its JSON in `web/src/data/guides/` and run `npm run index-guides`. The build also runs it.

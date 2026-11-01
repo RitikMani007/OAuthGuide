@@ -6,6 +6,8 @@ import { md } from "@/lib/md";
 import { DifficultyDots, EvidenceBadge, OwnerBadge, APPROVAL_LABEL } from "@/components/badges";
 import { StepChecklist } from "@/components/step-checklist";
 import { ShareBar } from "@/components/share-bar";
+import { AppLogo } from "@/components/app-logo";
+import { resolveLogo } from "@/lib/directory";
 import type { StoredGuide } from "@/lib/schema";
 
 export const dynamic = "force-dynamic";
@@ -54,7 +56,10 @@ export default async function GuidePage({ params }: Props) {
             )}
           </span>
         </div>
-        <h1 className="text-3xl font-semibold tracking-tight">{g.name}: OAuth app setup &amp; approval</h1>
+        <div className="flex items-center gap-4">
+          <AppLogo src={g.meta.logo ?? resolveLogo({ name: g.name, website: g.website })} name={g.name} size="lg" />
+          <h1 className="text-3xl font-semibold tracking-tight">{g.name}: OAuth app setup &amp; approval</h1>
+        </div>
         <p className="text-stone-700 max-w-3xl text-[15px] leading-relaxed">{g.summary}</p>
         <ShareBar guide={g} />
       </header>

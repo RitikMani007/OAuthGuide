@@ -517,6 +517,7 @@
           "note": "Live probe of the OpenID discovery doc matches both endpoints. It has no code_challenge_methods_supported, so PKCE stays 'unknown', not 'unsupported'. Authorize 301s to /app/connect/oauth2. Added tested sources s14/s15."
         }
       ]
-    }
+    },
+    "logo": "https://logos.composio.dev/api/quickbooks"
   }
 }

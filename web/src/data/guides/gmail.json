@@ -582,6 +582,7 @@
           "note": "Live probe 2026-11-01: OIDC discovery lists both endpoints and code_challenge_methods_supported [plain, S256]; a dummy client_id at the authorize URL returns invalid_client. Probe sources t1/t2 added. Not upgraded to 'tested' at step level, because those steps also cover console actions that weren't tested."
         }
       ]
-    }
+    },
+    "logo": "https://logos.composio.dev/api/gmail"
   }
 }

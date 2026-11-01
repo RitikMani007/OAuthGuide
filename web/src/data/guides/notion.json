@@ -444,6 +444,7 @@
           "note": "Neither is mentioned in the Authorization doc, so I left them as undocumented."
         }
       ]
-    }
+    },
+    "logo": "https://logos.composio.dev/api/notion"
   }
 }

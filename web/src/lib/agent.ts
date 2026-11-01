@@ -2,7 +2,8 @@ import "server-only";
 import Anthropic from "@anthropic-ai/sdk";
 import { toJSONSchema } from "zod";
 import { Guide, type StoredGuide } from "./schema";
-import { composioManagedMatch } from "./composio";
+import { composioManagedMatch, directoryContext } from "./composio";
+import { resolveLogo } from "./directory";
 import { httpProbe } from "./probe";
 import { slugify, saveGenerated } from "./store";
 import { enforceEvidence } from "./evidence";
@@ -176,6 +177,7 @@ export async function* generateGuideClaude(input: string, signal?: AbortSignal):
 Suggested slug: ${slugify(input)}
 Today: ${today}
 Composio managed OAuth app listed for this toolkit: ${managed ? `yes ("${managed}")` : "not found in the managed list (set composio_managed to false if the name clearly matches nothing, null if unsure)"}.
+${directoryContext(input)}
 
 <dossier>
 ${dossier}
@@ -220,7 +222,7 @@ ${dossier}
   const guide: StoredGuide = {
     ...enforceEvidence(parsed.data),
     slug: slugify(parsed.data.slug || input),
-    meta: { origin: "generated", generated_at: new Date().toISOString(), model: final.model, dossier },
+    meta: { origin: "generated", generated_at: new Date().toISOString(), model: final.model, dossier, logo: resolveLogo({ name: parsed.data.name, website: parsed.data.website, query: input }) },
   };
   await saveGenerated(guide);
   yield { type: "guide", slug: guide.slug };

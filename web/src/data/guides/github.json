@@ -488,6 +488,7 @@
           "note": "The 10-URL limit is confirmed for both app types. The Aug 3 2026 wildcard default appears on the GitHub App callback-URL doc, not an OAuth App doc, so I reworded it and updated the uncertain entry."
         }
       ]
-    }
+    },
+    "logo": "https://logos.composio.dev/api/github"
   }
 }

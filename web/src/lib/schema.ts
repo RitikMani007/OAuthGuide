@@ -120,6 +120,8 @@ export type StoredGuide = Guide & {
     origin: "curated" | "generated";
     generated_at: string;
     model?: string;
+    /** provider logo (directory logo or site favicon); not written by the model */
+    logo?: string | null;
     /** raw research notes from the live agent, kept for auditability */
     dossier?: string;
     verification?: {
