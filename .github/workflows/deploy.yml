@@ -45,17 +45,16 @@ jobs:
       run:
         working-directory: web
     steps:
+      - uses: actions/checkout@v4
       - name: Check for VERCEL_TOKEN
         id: gate
         env:
           TOKEN: ${{ secrets.VERCEL_TOKEN }}
         run: |
           if [ -z "$TOKEN" ]; then
-            echo "::warning::VERCEL_TOKEN secret is not set; skipping deploy. Add it under Settings → Secrets and variables → Actions."
+            echo "::warning::VERCEL_TOKEN secret is not set; skipping deploy. Add it under Settings > Secrets and variables > Actions."
             echo "skip=true" >> "$GITHUB_OUTPUT"
           fi
-      - uses: actions/checkout@v4
-        if: steps.gate.outputs.skip != 'true'
       - uses: actions/setup-node@v4
         if: steps.gate.outputs.skip != 'true'
         with:
