@@ -1,12 +1,9 @@
 import "server-only";
-import { z } from "zod";
-import { toJSONSchema } from "zod";
 import type { StoredGuide, CheckResult, CheckStatus, AutoChecks } from "./schema";
 import { httpProbe, checkPublicHttps } from "./probe";
-import { readPage } from "./web";
 import { findToolkit } from "./directory";
 import { guideToMarkdown } from "./export";
-import { gemini, FAST_MODELS, WRITER_MODELS } from "./gemini";
+import { recheckClaims } from "./recheck";
 
 // Post-generation verification. Runs right after a guide is saved (and on demand for
 // existing guides). Two layers:
@@ -226,12 +223,18 @@ export async function* verifyGuide(input: StoredGuide, opts: VerifyOptions = {})
 
   // ---- 6. Independent claim re-check (model) -------------------------------------------
   if (opts.claims) {
-    yield { type: "note", text: "Re-checking the highest-impact claims against freshly fetched sources… " };
+    yield { type: "note", text: "Second pass: an independent re-check of the highest-impact claims. " };
     try {
-      const outcome = await recheckClaims(g, { dead, unreachable, discovery, signal: opts.signal });
+      const it = recheckClaims(g, { dead, unreachable, discovery, signal: opts.signal });
+      let step = await it.next();
+      while (!step.done) {
+        yield step.value;
+        step = await it.next();
+      }
+      const outcome = step.value;
       for (const f of outcome.findings) yield { type: "claim", finding: f };
       for (const a of outcome.applied) applied.push(a);
-      g.meta.verification = { date: today(), kind: "automated", model: outcome.model, method: `Automated re-check of ${outcome.findings.length} high-impact claims by a model that did not write the guide, against ${outcome.pages} freshly fetched cited pages and ${outcome.probes} live probe results.`, findings: outcome.findings };
+      g.meta.verification = { date: today(), kind: "automated", model: outcome.model, method: outcome.method, findings: outcome.findings };
       const n = (r: Finding["result"]) => outcome.findings.filter((f) => f.result === r).length;
       yield emit({ group: "claims", label: "Claim re-check", status: n("corrected") ? "warn" : "pass", detail: `${n("confirmed")} confirmed, ${n("corrected")} corrected, ${n("unverified")} unverified (model: ${outcome.model}).` });
     } catch (e) {
@@ -244,79 +247,6 @@ export async function* verifyGuide(input: StoredGuide, opts: VerifyOptions = {})
   const checks: AutoChecks = { date: today(), duration_ms: Date.now() - started, results, summary, applied };
   g.meta.checks = checks;
   return g;
-}
-
-// ---------------------------------------------------------------------------------------
-
-const Findings = z.object({
-  findings: z.array(
-    z.object({
-      claim: z.string(),
-      result: z.enum(["confirmed", "corrected", "unverified"]),
-      note: z.string().describe("one or two sentences: what the source says, or why it could not be checked"),
-      quote: z.string().describe("the exact supporting sentence from the provided text, or empty"),
-      corrected_value: z.string().describe("only when result is corrected: the corrected short statement (max 200 chars), else empty"),
-    }),
-  ),
-});
-
-type Claim = { key: string; field: string; text: string; apply?: (v: string) => void };
-
-async function recheckClaims(g: StoredGuide, ctx: { dead: Set<string>; unreachable: Set<string>; discovery: Record<string, unknown> | null; signal?: AbortSignal }) {
-  const claims: Claim[] = [
-    { key: "c1", field: "verdict.headline_blocker", text: `The single most likely blocker is: ${g.verdict.headline_blocker}`, apply: (v) => (g.verdict.headline_blocker = v) },
-    { key: "c2", field: "review.typical_duration", text: `Review/approval typically takes: ${g.review.typical_duration}`, apply: (v) => (g.review.typical_duration = v) },
-    { key: "c3", field: "review.required_when", text: `Review is required when: ${g.review.required_when}` },
-    { key: "c4", field: "oauth.pkce", text: `PKCE: ${g.oauth.pkce}`, apply: (v) => (g.oauth.pkce = v) },
-    { key: "c5", field: "oauth.refresh_tokens", text: `Tokens and refresh: ${g.oauth.refresh_tokens}`, apply: (v) => (g.oauth.refresh_tokens = v) },
-  ];
-  const cap = g.stages.find((s) => /\d/.test(s.what_you_get));
-  if (cap) claims.push({ key: "c6", field: "stages", text: `Stage "${cap.name}": ${cap.what_you_get}` });
-  const restricted = g.scopes.filter((s) => s.tier === "restricted" || s.tier === "partner-only").slice(0, 3);
-  if (restricted.length) claims.push({ key: "c7", field: "scopes", text: `These scopes are ${restricted[0].tier}: ${restricted.map((s) => `${s.scope} (${s.review_impact})`).join("; ")}` });
-
-  // Fresh evidence: official sources that are still reachable, read now.
-  const candidates = g.sources.filter((s) => s.kind !== "tested" && !ctx.dead.has(s.id) && !ctx.unreachable.has(s.id)).sort((a, b) => Number(b.kind === "official") - Number(a.kind === "official")).slice(0, 6);
-  const pages = (await mapLimit(candidates, 4, async (s) => ({ s, p: await readPage(s.url, 6000) }))).filter((x) => !x.p.error || x.p.text.length > 500);
-  if (!pages.length) throw new Error("none of the cited pages could be re-read");
-  const probeText = ctx.discovery ? `DISCOVERY DOCUMENT (live probe): ${JSON.stringify(ctx.discovery).slice(0, 2500)}` : "";
-
-  const res = await gemini({
-    models: [...WRITER_MODELS, ...FAST_MODELS],
-    system: `You are an independent fact-checker for a developer guide about registering an OAuth app with ${g.name}. You did not write the guide. For each claim decide, using ONLY the page text and probe results provided:
-- "confirmed": the text clearly supports the claim (quote the sentence).
-- "corrected": the text clearly contradicts a specific detail (give the corrected statement in corrected_value, short, in the same style as the claim's value, and quote the sentence).
-- "unverified": the provided text does not settle it.
-Never use outside knowledge. Do not correct wording that is merely different; only correct facts (numbers, durations, requirements, yes/no). Return every claim.`,
-    prompt: `CLAIMS\n${claims.map((c) => `[${c.key}] ${c.text}`).join("\n")}\n\nSOURCES (freshly fetched today)\n${pages.map(({ s, p }) => `### ${s.title} — ${s.url}\n${p.text}`).join("\n\n")}\n\n${probeText}`,
-    schema: toJSONSchema(Findings) as Record<string, unknown>,
-    timeoutMs: 90_000,
-    signal: ctx.signal,
-  });
-  const parsed = Findings.parse(JSON.parse(res.text));
-  const applied: string[] = [];
-  const findings: Finding[] = [];
-  for (const f of parsed.findings) {
-    const claim = claims.find((c) => f.claim.includes(`[${c.key}]`) || c.text.startsWith(f.claim.slice(0, 40))) ?? claims.find((c) => f.claim.toLowerCase().includes(c.field.split(".").pop()!.replace("_", " ")));
-    const label = claim ? claim.text : f.claim;
-    findings.push({ claim: label.replace(/^\[c\d\]\s*/, "").slice(0, 300), result: f.result, note: f.note.slice(0, 400), quote: f.quote?.slice(0, 300) || undefined });
-    const nonAnswer = /not (mentioned|specified|stated|documented|discussed)|does not mention|unclear|unknown|cannot be determined/i.test(f.corrected_value ?? "");
-    if (f.result === "corrected" && nonAnswer) {
-      // "Corrected" to "the docs don't say" is not a correction; keep the guide's value and log it as unverified.
-      f.result = "unverified";
-      findings[findings.length - 1].result = "unverified";
-    }
-    if (f.result === "corrected" && claim?.apply && f.corrected_value && f.corrected_value.length <= 200) {
-      const value = f.corrected_value.replace(/^[^:]{0,40}:\s*/, "");
-      claim.apply(value);
-      applied.push(`Corrected ${claim.field} to "${value}" (source: ${f.quote?.slice(0, 80) || "see verification log"}).`);
-    } else if (f.result === "unverified" && claim) {
-      const line = `Automated re-check could not confirm: ${claim.text.slice(0, 160)}`;
-      if (!g.uncertain.some((u) => u.startsWith("Automated re-check could not confirm"))) g.uncertain = [...g.uncertain, line];
-      else g.uncertain = g.uncertain.map((u) => (u.startsWith("Automated re-check could not confirm") && !u.includes(claim.text.slice(0, 40)) ? `${u}; ${claim.text.slice(0, 120)}` : u));
-    }
-  }
-  return { findings, applied, model: res.model, pages: pages.length, probes: ctx.discovery ? 1 : 0 };
 }
 
 // ---------------------------------------------------------------------------------------
