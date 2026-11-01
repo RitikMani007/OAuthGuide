@@ -2,7 +2,7 @@
 
 **How long until your users can connect this app?** OAuth Runway gives developers building AI agents setup and approval guides for provider OAuth apps. You can look up a provider in the library, or submit any app name or website and watch an agent investigate it and write a shareable guide in real time.
 
-- Live demo: _<Vercel URL>_. If a passcode is configured for live generation, it is in the submission notes.
+- Live demo: https://oauthguide-psi.vercel.app If a passcode is configured for live generation, it is in the submission notes.
 - Code: `web/` (Next.js 15 on Vercel). Live generation runs on Gemini's free tier, with Claude available as a drop-in provider.
 - Evidence: `verification/` (live probe logs and the drafts from before verification)
 
